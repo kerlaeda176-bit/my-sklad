@@ -5,7 +5,7 @@ st.set_page_config(page_title="Склад Металла", page_icon="🏭", lay
 st.title("🏭 Мобильный Склад")
 st.write("Учет остатков в рулонах и квадратных метрах")
 
-# База данных склада в памяти смартфона
+# Используем st.session_state, чтобы новые цвета не пропадали при обновлении страницы
 if 'sklad' not in st.session_state:
     st.session_state.sklad = {
         "RAL 7024 (Серый графит) Глянцевый": {"м2": 150.28, "базовая_длина": 10},
@@ -27,7 +27,7 @@ if 'sklad' not in st.session_state:
         "ЗолДуб Глянцевый": {"м2": 0.0, "базовая_длина": 12}
     }
 
-# РАЗДЕЛ 1: ОСТАТКИ
+# ЭКРАН 1: ТЕКУЩИЕ ОСТАТКИ
 st.header("📊 Остатки в цеху")
 for metal, values in st.session_state.sklad.items():
     st.subheader(f"• {metal}")
@@ -40,7 +40,25 @@ for metal, values in st.session_state.sklad.items():
     col2.metric(f"В рулонах (по {roll_len}м)", f"{rolls_count:.1f} шт")
 st.write("---")
 
-# РАЗДЕЛ 2: ПРИХОД
+# НОВЫЙ ЭКРАН: ДОБАВЛЕНИЕ НОВОГО ЦВЕТА/МАТЕРИАЛА
+st.header("➕ Добавить новый цвет в базу")
+with st.form("new_color_form"):
+    new_name = st.text_input("Введите название металла/цвета (например: RAL 7016 Матовый)")
+    new_len = st.selectbox("Базовая длина рулона для этого цвета, метров", (12, 10))
+    start_m2 = st.number_input("Начальный остаток на складе, м²", min_value=0.0, step=0.1, value=0.0)
+    
+    submitted_new = st.form_submit_button("Создать новый цвет")
+    if submitted_new and new_name:
+        # Проверяем, нет ли уже такого цвета
+        if new_name not in st.session_state.sklad:
+            st.session_state.sklad[new_name] = {"м2": start_m2, "базовая_длина": new_len}
+            st.success(f"Металл '{new_name}' успешно добавлен в базу склада!")
+            st.rerun()
+        else:
+            st.error("Этот цвет уже есть в базе данных!")
+st.write("---")
+
+# ЭКРАН 3: ПРИХОД
 st.header("📥 Оформить Приход")
 with st.form("income_form"):
     chosen_metal = st.selectbox("Выберите металл для прихода", list(st.session_state.sklad.keys()))
@@ -54,7 +72,7 @@ with st.form("income_form"):
         st.success(f"Добавлено {added_m2:.2f} м² ({rolls} рул. по {length}м)!")
         st.rerun()
 
-# РАЗДЕЛ 3: РАСХОД ПО РАЗМЕРАМ ДЕТАЛЕЙ
+# ЭКРАН 4: РАСХОД ПО РАЗМЕРАМ ДЕТАЛЕЙ
 st.header("📤 Списать Расход")
 with st.form("outcome_form"):
     chosen_metal_out = st.selectbox("Выберите металл для списания", list(st.session_state.sklad.keys()))
@@ -63,9 +81,7 @@ with st.form("outcome_form"):
     det_width = st.number_input("Ширина детали, мм", min_value=0, step=10, value=500)
     det_count = st.number_input("Количество деталей, шт", min_value=1, step=1, value=1)
     
-    # Автоматический подсчет площади: (Длина * Ширина / 1 000 000) * Количество
     calculated_m2 = (det_length * det_width / 1000000.0) * det_count
-    
     st.info(f"📐 Расчетная площадь: {calculated_m2:.2f} м²")
     
     submitted_out = st.form_submit_button("Списать металл со склада")
