@@ -27,9 +27,18 @@ if 'sklad' not in st.session_state:
         "ЗолДуб Глянцевый": {"м2": 0.0, "базовая_длина": 12}
     }
 
-# РАЗДЕЛ 1: ОСТАТКИ
+# ОБНОВЛЕННЫЙ РАЗДЕЛ 1: ТЕКУЩИЕ ОСТАТКИ С ФИЛЬТРОМ
 st.header("📊 Остатки в цеху")
-for metal, values in st.session_state.sklad.items():
+
+# Создаем список для выбора цвета (Все + список из базы)
+color_options = ["🔍 Показать все цвета"] + list(st.session_state.sklad.keys())
+selected_filter = st.selectbox("🎯 Фильтр по цвету металла:", color_options)
+
+# Логика отображения в зависимости от фильтра
+metals_to_show = st.session_state.sklad.keys() if selected_filter == "🔍 Показать все цвета" else [selected_filter]
+
+for metal in metals_to_show:
+    values = st.session_state.sklad[metal]
     st.subheader(f"• {metal}")
     col1, col2 = st.columns(2)
     col1.metric("Площадь, м²", f"{values['м2']:.2f} м²")
@@ -57,7 +66,7 @@ with st.form("new_color_form"):
             st.error("Этот цвет уже есть в базе данных!")
 st.write("---")
 
-# РАЗДЕЛ 3: ПРИХОД
+# РАЗДЕЛ 3: ОФОРМЛЕНИЕ ПРИХОДА
 st.header("📥 Оформить Приход")
 with st.form("income_form"):
     chosen_metal = st.selectbox("Выберите металл для прихода", list(st.session_state.sklad.keys()))
@@ -71,17 +80,13 @@ with st.form("income_form"):
         st.success(f"Добавлено {added_m2:.2f} м² ({rolls} рул. по {length}м)!")
         st.rerun()
 
-# РАЗДЕЛ 4: РАСХОД С УЧЕТОМ ТРАПЕЦИИ
+# РАЗДЕЛ 4: РАСХОД ПО РАЗМЕРАМ ЗАГОТОВОК
 st.header("📤 Списать Расход")
 with st.form("outcome_form"):
     chosen_metal_out = st.selectbox("Выберите металл для списания", list(st.session_state.sklad.keys()))
+    shape_type = st.radio("Форма定 детали:", ("Прямоугольная", "Трапеция"))
+    det_length = st.number_input("Чистая длина детали, мм", min_value=0, step=10, value=1000)
     
-    # Переключатель формы детали
-    shape_type = st.radio("Форма детали:", ("Прямоугольная", "Трапеция"))
-    
-    det_length = st.number_input("Длина детали, мм", min_value=0, step=10, value=1000)
-    
-    # Исправленное разделение полей ввода
     if shape_type == "Прямоугольная":
         det_width = st.number_input("Ширина детали, мм", min_value=0, step=10, value=500, key="width_rect")
         calculated_m2_single = (det_length * det_width) / 1000000.0
@@ -91,11 +96,9 @@ with st.form("outcome_form"):
         calculated_m2_single = (((det_width_1 + det_width_2) / 2.0) * det_length) / 1000000.0
         
     det_count = st.number_input("Количество деталей, шт", min_value=1, step=1, value=1)
-    
-    # Итоговая площадь партии
     calculated_m2 = calculated_m2_single * det_count
     
-    st.info(f"📐 Расчетная площадь партии: {calculated_m2:.2f} м²")
+    st.info(f"📐 Чистая расчетная площадь партии: {calculated_m2:.2f} м²")
     
     submitted_out = st.form_submit_button("Списать металл со склада")
     if submitted_out:
