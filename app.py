@@ -71,7 +71,7 @@ with st.form("income_form"):
         st.success(f"Добавлено {added_m2:.2f} м² ({rolls} рул. по {length}м)!")
         st.rerun()
 
-# ОБНОВЛЕННЫЙ РАЗДЕЛ 4: РАСХОД С УЧЕТОМ ТРАПЕЦИИ
+# РАЗДЕЛ 4: РАСХОД С УЧЕТОМ ТРАПЕЦИИ
 st.header("📤 Списать Расход")
 with st.form("outcome_form"):
     chosen_metal_out = st.selectbox("Выберите металл для списания", list(st.session_state.sklad.keys()))
@@ -81,14 +81,13 @@ with st.form("outcome_form"):
     
     det_length = st.number_input("Длина детали, мм", min_value=0, step=10, value=1000)
     
+    # Исправленное разделение полей ввода
     if shape_type == "Прямоугольная":
-        det_width = st.number_input("Ширина детали, мм", min_value=0, step=10, value=500)
-        # Расчет для прямоугольника
+        det_width = st.number_input("Ширина детали, мм", min_value=0, step=10, value=500, key="width_rect")
         calculated_m2_single = (det_length * det_width) / 1000000.0
     else:
-        det_width_1 = st.number_input("Ширина НИЖНЯЯ, мм", min_value=0, step=10, value=600)
-        det_width_2 = st.number_input("Ширина ВЕРХНЯЯ, мм", min_value=0, step=10, value=300)
-        # Расчет для трапеции: средняя ширина * длина
+        det_width_1 = st.number_input("Ширина НИЖНЯЯ (Основание 1), мм", min_value=0, step=10, value=600, key="width_trap1")
+        det_width_2 = st.number_input("Ширина ВЕРХНЯЯ (Основание 2), мм", min_value=0, step=10, value=300, key="width_trap2")
         calculated_m2_single = (((det_width_1 + det_width_2) / 2.0) * det_length) / 1000000.0
         
     det_count = st.number_input("Количество деталей, шт", min_value=1, step=1, value=1)
@@ -106,4 +105,3 @@ with st.form("outcome_form"):
             st.rerun()
         else:
             st.error(f"Ошибка! На складе всего {st.session_state.sklad[chosen_metal_out]['м2']:.2f} м². Не хватает.")
-
