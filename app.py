@@ -5,7 +5,7 @@ st.set_page_config(page_title="Склад Металла", page_icon="🏭", lay
 st.title("🏭 Мобильный Склад")
 st.write("Учет остатков в рулонах и квадратных метрах")
 
-# Используем st.session_state, чтобы новые цвета не пропадали при обновлении страницы
+# База данных склада в памяти смартфона
 if 'sklad' not in st.session_state:
     st.session_state.sklad = {
         "RAL 7024 (Серый графит) Глянцевый": {"м2": 150.28, "базовая_длина": 10},
@@ -27,7 +27,7 @@ if 'sklad' not in st.session_state:
         "ЗолДуб Глянцевый": {"м2": 0.0, "базовая_длина": 12}
     }
 
-# ЭКРАН 1: ТЕКУЩИЕ ОСТАТКИ
+# РАЗДЕЛ 1: ОСТАТКИ
 st.header("📊 Остатки в цеху")
 for metal, values in st.session_state.sklad.items():
     st.subheader(f"• {metal}")
@@ -40,7 +40,7 @@ for metal, values in st.session_state.sklad.items():
     col2.metric(f"В рулонах (по {roll_len}м)", f"{rolls_count:.1f} шт")
 st.write("---")
 
-# НОВЫЙ ЭКРАН: ДОБАВЛЕНИЕ НОВОГО ЦВЕТА/МАТЕРИАЛА
+# РАЗДЕЛ 2: ДОБАВЛЕНИЕ НОВОГО ЦВЕТА
 st.header("➕ Добавить новый цвет в базу")
 with st.form("new_color_form"):
     new_name = st.text_input("Введите название металла/цвета (например: RAL 7016 Матовый)")
@@ -49,7 +49,6 @@ with st.form("new_color_form"):
     
     submitted_new = st.form_submit_button("Создать новый цвет")
     if submitted_new and new_name:
-        # Проверяем, нет ли уже такого цвета
         if new_name not in st.session_state.sklad:
             st.session_state.sklad[new_name] = {"м2": start_m2, "базовая_длина": new_len}
             st.success(f"Металл '{new_name}' успешно добавлен в базу склада!")
@@ -58,7 +57,7 @@ with st.form("new_color_form"):
             st.error("Этот цвет уже есть в базе данных!")
 st.write("---")
 
-# ЭКРАН 3: ПРИХОД
+# РАЗДЕЛ 3: ПРИХОД
 st.header("📥 Оформить Приход")
 with st.form("income_form"):
     chosen_metal = st.selectbox("Выберите металл для прихода", list(st.session_state.sklad.keys()))
@@ -72,23 +71,39 @@ with st.form("income_form"):
         st.success(f"Добавлено {added_m2:.2f} м² ({rolls} рул. по {length}м)!")
         st.rerun()
 
-# ЭКРАН 4: РАСХОД ПО РАЗМЕРАМ ДЕТАЛЕЙ
+# ОБНОВЛЕННЫЙ РАЗДЕЛ 4: РАСХОД С УЧЕТОМ ТРАПЕЦИИ
 st.header("📤 Списать Расход")
 with st.form("outcome_form"):
     chosen_metal_out = st.selectbox("Выберите металл для списания", list(st.session_state.sklad.keys()))
     
+    # Переключатель формы детали
+    shape_type = st.radio("Форма детали:", ("Прямоугольная", "Трапеция"))
+    
     det_length = st.number_input("Длина детали, мм", min_value=0, step=10, value=1000)
-    det_width = st.number_input("Ширина детали, мм", min_value=0, step=10, value=500)
+    
+    if shape_type == "Прямоугольная":
+        det_width = st.number_input("Ширина детали, мм", min_value=0, step=10, value=500)
+        # Расчет для прямоугольника
+        calculated_m2_single = (det_length * det_width) / 1000000.0
+    else:
+        det_width_1 = st.number_input("Ширина НИЖНЯЯ, мм", min_value=0, step=10, value=600)
+        det_width_2 = st.number_input("Ширина ВЕРХНЯЯ, мм", min_value=0, step=10, value=300)
+        # Расчет для трапеции: средняя ширина * длина
+        calculated_m2_single = (((det_width_1 + det_width_2) / 2.0) * det_length) / 1000000.0
+        
     det_count = st.number_input("Количество деталей, шт", min_value=1, step=1, value=1)
     
-    calculated_m2 = (det_length * det_width / 1000000.0) * det_count
-    st.info(f"📐 Расчетная площадь: {calculated_m2:.2f} м²")
+    # Итоговая площадь партии
+    calculated_m2 = calculated_m2_single * det_count
+    
+    st.info(f"📐 Расчетная площадь партии: {calculated_m2:.2f} м²")
     
     submitted_out = st.form_submit_button("Списать металл со склада")
     if submitted_out:
         if st.session_state.sklad[chosen_metal_out]["м2"] >= calculated_m2:
             st.session_state.sklad[chosen_metal_out]["м2"] -= calculated_m2
-            st.success(f"Успешно списано {calculated_m2:.2f} м² ({det_count} шт. {det_length}x{det_width}мм)!")
+            st.success(f"Успешно списано {calculated_m2:.2f} м²!")
             st.rerun()
         else:
-            st.error(f"Ошибка! На складе всего {st.session_state.sklad[chosen_metal_out]['м2']:.2f} м². Не хватает для списания.")
+            st.error(f"Ошибка! На складе всего {st.session_state.sklad[chosen_metal_out]['м2']:.2f} м². Не хватает.")
+
