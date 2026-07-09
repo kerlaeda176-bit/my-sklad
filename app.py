@@ -4,12 +4,23 @@ import os
 
 st.set_page_config(page_title="Склад Металла", page_icon="🏭", layout="centered")
 
+# Отключаем всплывающую клавиатуру для списков на мобильных устройствах через скрытие поиска
+st.markdown(
+    """
+    <style>
+    div[data-baseweb="select"] input {
+        inputmode: none !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 st.title("🏭 Мобильный Склад")
 st.write("Учет остатков в рулонах, листах и квадратных метрах")
 
 DB_FILE = "sklad_data.json"
 
-# Начальная база данных (используется только ОДИН раз при самом первом запуске)
 START_DATA = {
     "RAL 7024 (Серый графит) Глянцевый": {"м2": 150.28, "тип": "рулон", "базовая_длина": 10},
     "RAL 8017 (Шоколад) Глянцевый": {"м2": 49.53, "тип": "рулон", "базовая_длина": 12},
@@ -30,12 +41,10 @@ START_DATA = {
     "ЗолДуб Глянцевый": {"м2": 0.0, "тип": "рулон", "базовая_длина": 12}
 }
 
-# Функция ЖЕСТКОГО сохранения данных в файл памяти
 def save_to_db(data):
     with open(DB_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
-# Функция ЖЕСТКОГО чтения данных из файла памяти
 def load_from_db():
     if os.path.exists(DB_FILE):
         try:
@@ -47,10 +56,9 @@ def load_from_db():
         save_to_db(START_DATA)
         return START_DATA
 
-# Загружаем актуальные данные из постоянной памяти
 sklad_data = load_from_db()
 
-# РАЗДЕЛ 1: ТЕКУЩИЕ ОСТАТКИ С ФИЛЬТРОМ
+# РАЗДЕЛ 1: ТЕКУЩИЕ ОСТАТКИ С ФИЛЬТРОМ (Клавиатура отключена)
 st.header("📊 Остатки в цеху")
 
 color_options = ["🔍 Показать все цвета"] + list(sklad_data.keys())
@@ -74,7 +82,7 @@ for metal in metals_to_show:
         col2.metric(f"В рулонах (по {roll_len}м)", f"{rolls_count:.1f} шт")
 st.write("---")
 
-# РАЗДЕЛ 2: ДОБАВЛЕНИЕ НОВОГО ЦВЕТА/МАТЕРИАЛА
+# РАЗДЕЛ 2: ДОБАВЛЕНИЕ НОВОГО ЦВЕТА (Клавиатура РАЗРЕШЕНА для ввода текста)
 st.header("➕ Добавить новый цвет в базу")
 with st.form("new_color_form"):
     new_name = st.text_input("Введите название металла/цвета")
@@ -87,14 +95,14 @@ with st.form("new_color_form"):
         if new_name not in sklad_data:
             t_type = "лист_2х1" if mat_type == "Штучный лист 2х1 метр" else "рулон"
             sklad_data[new_name] = {"м2": start_m2, "тип": t_type, "базовая_длина": new_len}
-            save_to_db(sklad_data) # ЗАПИСЬ В ПАМЯТЬ
+            save_to_db(sklad_data)
             st.success(f"Материал '{new_name}' успешно добавлен в базу склада!")
             st.rerun()
         else:
             st.error("Этот материал уже есть в базе данных!")
 st.write("---")
 
-# РАЗДЕЛ 3: ОФОРМЛЕНИЕ ПРИХОДА
+# РАЗДЕЛ 3: ОФОРМЛЕНИЕ ПРИХОДА (Клавиатура отключена)
 st.header("📥 Оформить Приход")
 with st.form("income_form"):
     chosen_metal = st.selectbox("Выберите металл для прихода", list(sklad_data.keys()))
@@ -111,18 +119,18 @@ with st.form("income_form"):
         if is_sheet and sheets > 0:
             added_m2 = sheets * 2.0
             sklad_data[chosen_metal]["м2"] += added_m2
-            save_to_db(sklad_data) # ЗАПИСЬ В ПАМЯТЬ
+            save_to_db(sklad_data)
             st.success(f"Добавлено {added_m2:.2f} м²!")
             st.rerun()
         elif not is_sheet and rolls > 0:
             added_m2 = rolls * length * 1.25
             sklad_data[chosen_metal]["м2"] += added_m2
-            save_to_db(sklad_data) # ЗАПИСЬ В ПАМЯТЬ
+            save_to_db(sklad_data)
             st.success(f"Добавлено {added_m2:.2f} м²!")
             st.rerun()
 st.write("---")
 
-# РАЗДЕЛ 4: РАСХОД ПО РАЗМЕРАМ ЗАГОТОВОК
+# РАЗДЕЛ 4: РАСХОД ПО РАЗМЕРАМ ЗАГОТОВОК (Клавиатура отключена)
 st.header("📤 Списать Расход")
 with st.form("outcome_form"):
     chosen_metal_out = st.selectbox("Выберите металл для списания", list(sklad_data.keys()))
@@ -146,7 +154,7 @@ with st.form("outcome_form"):
     if submitted_out:
         if sklad_data[chosen_metal_out]["м2"] >= calculated_m2:
             sklad_data[chosen_metal_out]["м2"] -= calculated_m2
-            save_to_db(sklad_data) # ЗАПИСЬ В ПАМЯТЬ
+            save_to_db(sklad_data)
             st.success(f"Успешно списано {calculated_m2:.2f} м²!")
             st.rerun()
         else:
