@@ -27,16 +27,19 @@ half_base_trap = (A - K) / 2.0 if A > K else 1.0
 h_trap = round(math.sqrt(H**2 + (B / 2.0)**2), 1) if B > 0 else 0
 h_tri = round(math.sqrt(H**2 + half_base_trap**2), 1)
 
-# --- 📐 ЧУДО-РАСЧЕТ ТОЧНЫХ УГЛОВ ГИБА (В ГРАДУСАХ) ---
-# 1. Угол наклона бокового ската (Бабочки) относительно горизонтали
+# Чистые углы наклона скатов от горизонтали
 angle_skat_side = math.degrees(math.atan(H / (B / 2.0))) if B > 0 else 0
-# 2. Угол наклона торцевого ската (Треугольника) относительно горизонтали
 angle_skat_tri = math.degrees(math.atan(H / half_base_trap)) if half_base_trap > 0 else 0
 
-# 3. Угол завала юбки (чтобы юбка свисала строго вертикально вниз)
-# На листогибе угол догиба юбки от плоскости листа равен: 90 градусов + угол наклона самого ската
-angle_yubka_side = 90.0 + angle_skat_side
-angle_yubka_tri = 90.0 + angle_skat_tri
+# --- 📐 РАСЧЕТ ЧИСТЫХ УГЛОВ ДЕТАЛИ ---
+fact_konek = 180.0 - (2 * angle_skat_side) # Чистый внутренний угол конька
+fact_yubka_side = 90.0 + angle_skat_side   # Чистый угол боковой юбки
+fact_yubka_tri = 90.0 + angle_skat_tri    # Чистый угол торцевой юбки
+
+# --- 🔨 УМНЫЙ ПЕРЕСЧЕТ ПОД УГЛОМЕР ВАШЕГО СТАНКА (180 - факт + 10) ---
+stanko_konek = 180.0 - fact_konek + 10.0
+stanko_yubka_side = 180.0 - fact_yubka_side + 10.0
+stanko_yubka_tri = 180.0 - fact_yubka_tri + 10.0
 
 # Перевод в сантиметры для рулетки
 mark_Y1 = round(single_pripusk / 10.0, 1)
@@ -52,15 +55,14 @@ final_W = round(2 * h_trap + 2 * single_pripusk, 1)
 fig, ax = plt.subplots(figsize=(6, 6))
 ax.set_aspect('equal')
 
-# КРУПНО ПИШЕМ ОБЩИЙ РАЗМЕР КУСКА И УГЛЫ
+# КРУПНО ПИШЕМ ОБЩИЙ РАЗМЕР КУСКА И УГЛЫ ГИБА
 st.success(f"📦 **ОБЩИЙ ОТРЕЗ ОТ РУЛОНА ДЛЯ ВСЕХ ДЕТАЛЕЙ: {round(final_L/10, 1)} см х {round(final_W/10, 1)} см**")
 
-# ВЫВОД ГРАДУСОВ НА ЭКРАН ТЕЛЕФОНА
-st.warning(f"📐 **ГРАДУСЫ ДЛЯ НАСТРОЙКИ ЛИСТОГИБА:**\n\n"
-           f"• **Купол Бабочки (боковые скаты):** угол наклона **{round(angle_skat_side, 1)}°**\n"
-           f"• **Гиб боковой юбки:** повернуть на **{round(angle_yubka_side, 1)}°** (относительно полки ската)\n\n"
-           f"• **Торцевые треугольники:** угол наклона ската **{round(angle_skat_tri, 1)}°**\n"
-           f"• **Гиб торцевой юбки:** повернуть на **{round(angle_yubka_tri, 1)}°**")
+# ВЫВОД ЗНАЧЕНИЙ ДЛЯ ВАШЕГО ЭКРАНА СТАНКА
+st.warning(f"🔧 **ЗНАЧЕНИЯ ДЛЯ ЭКРАНА УГЛОМЕРА ЛИСТОГИБА:**\n\n"
+           f"• **При гибе конька (по центру):** выставить на датчике **{round(stanko_konek, 1)}°**\n"
+           f"• **При гибе боковой юбки (Бабочка):** выставить на датчике **{round(stanko_yubka_side, 1)}°**\n"
+           f"• **При гибе торцевой юбки (Треугольник):** выставить на датчике **{round(stanko_yubka_tri, 1)}°**")
 
 if part_type == "🦋 Центр — «Бабочка»":
     ax.add_patch(patches.Rectangle((0, 0), final_L, final_W, linewidth=2, edgecolor='red', facecolor='none', linestyle='--'))
@@ -76,7 +78,7 @@ if part_type == "🦋 Центр — «Бабочка»":
     ax.fill([0, klepki, klepki + half_base_trap, half_base_trap], [single_pripusk, single_pripusk, final_W/2, final_W/2], color='#d9e1f2', alpha=0.5, edgecolor='blue', linestyle='--')
     ax.fill([final_L, final_L - klepki, final_L - klepki - half_base_trap, final_L - half_base_trap], [single_pripusk, single_pripusk, final_W/2, final_W/2], color='#d9e1f2', alpha=0.5, edgecolor='blue', linestyle='--')
     ax.fill([0, klepki, klepki + half_base_trap, half_base_trap], [final_W - single_pripusk, final_W - single_pripusk, final_W/2, final_W/2], color='#d9e1f2', alpha=0.5, edgecolor='blue', linestyle='--')
-    ax.fill([final_L, final_L - klepki, final_L - klepki - half_base_trap, final_L - half_base_trap], [final_W - single_pripusk, final_W - single_pripusk, final_W/2, final_W/2], color='#d9e1f2', alpha=0.5, edgecolor='blue', linestyle='--')
+    ax.fill([final_L, final_L - klepki, final_L - klepki - half_base_trap, final_L - half_free_trap := final_W - single_pripusk], [final_W - single_pripusk, final_W - single_pripusk, final_W/2, final_W/2], color='#d9e1f2', alpha=0.5, edgecolor='blue', linestyle='--')
 
     ax.plot([klepki, klepki], [0, single_pripusk], color='green', linewidth=3)
     ax.plot([final_L - klepki, final_L - klepki], [0, single_pripusk], color='green', linewidth=3)
