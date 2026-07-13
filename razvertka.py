@@ -57,32 +57,33 @@ final_W = round(2 * h_trap + 2 * single_pripusk, 1)
 # Отрисовка чертежа
 fig, ax = plt.subplots(figsize=(6, 6))
 ax.set_aspect('equal')
-
 if part_type == "📋 Полный раскрой на одном листе":
-    # 🌟 ПОЛНЫЙ РАСКРОЙ: Расчет единого куска от рулона
-    # Так как треугольники по высоте (h_tri + припуск) обычно меньше или равны пустой боковой зоне Бабочки,
-    # они идеально вырезаются из боковых излишков. Длина общего отреза равна длине Бабочки!
     st.success(f"📦 **ОБЩИЙ ОТРЕЗ ОТ РУЛОНА ДЛЯ ВСЕХ ДЕТАЛЕЙ: {round(final_L/10, 1)} см  х  {round(final_W/10, 1)} см**")
     st.info("💡 Торцевые треугольники вырезаются из пустых боковых углов этого же листа!")
     
     # Контур общего листа
     ax.add_patch(patches.Rectangle((0, 0), final_L, final_W, linewidth=2, edgecolor='red', facecolor='none', linestyle='--'))
     
-    # Рисуем Бабочку по центру
-    start_x = klepki
-    ax.add_patch(patches.Rectangle((start_x, single_pripusk), K + 2 * h_tri, 2 * h_trap, linewidth=1.5, edgecolor='black', facecolor='#f9f9f2', alpha=0.9))
-    ax.plot([start_x + h_tri, start_x + h_tri + K], [final_W/2, final_W/2], color='blue', linewidth=3)
+    # Линии Бабочки по центру
+    clean_start_x = klepki
+    ax.add_patch(patches.Rectangle((clean_start_x, single_pripusk), K + 2 * h_tri, 2 * h_trap, linewidth=1.5, edgecolor='black', facecolor='#f9f9f2', alpha=0.9))
+    ax.plot([clean_start_x + h_tri, clean_start_x + h_tri + K], [final_W/2, final_W/2], color='blue', linewidth=3)
     
-    # Визуализируем схему укладки двух треугольников в пустые боковые зоны листа (по бокам от Бабочки)
-    # Левый треугольник (перевернутый в свободную зону)
-    ax.fill([0, start_x, 0], [0, 0, final_W/2], color='#e2efda', alpha=0.7, edgecolor='green', linestyle=':', label='Торцевой 1')
-    # Правый треугольник
-    ax.fill([final_L, final_L - start_x, final_L], [final_W, final_W, final_W/2], color='#e2efda', alpha=0.7, edgecolor='green', linestyle=':')
+    ax.plot([klepki, final_L - klepki], [single_pripusk, single_pripusk], color='black', linewidth=1.5)
+    ax.plot([klepki, klepki + half_base_trap], [single_pripusk, final_W/2], color='black', linewidth=1.2)
+    ax.plot([final_L - klepki, final_L - klepki - half_base_trap], [single_pripusk, final_W/2], color='black', linewidth=1.2)
+    ax.plot([klepki, final_L - klepki], [final_W - single_pripusk, final_W - single_pripusk], color='black', linewidth=1.5)
+    ax.plot([klepki, klepki + half_base_trap], [final_W - single_pripusk, final_W/2], color='black', linewidth=1.2)
+    ax.plot([final_L - klepki, final_L - klepki - half_base_trap], [final_W - single_pripusk, final_W/2], color='black', linewidth=1.2)
+    
+    # Схема укладки треугольников по бокам
+    ax.fill([0, clean_start_x, 0], [0, 0, final_W/2], color='#e2efda', alpha=0.7, edgecolor='green', linestyle=':')
+    ax.fill([final_L, final_L - clean_start_x, final_L], [final_W, final_W, final_W/2], color='#e2efda', alpha=0.7, edgecolor='green', linestyle=':')
     
     ax.text(final_L/2.0, final_W + 35, f"ОТРЕЗ ОТ РУЛОНА: {round(final_L/10, 1)} см", ha='center', color='red', weight='bold', size=12)
     ax.text(-35, final_W/2.0, f"ШИРИНА ШТРИПСА:\n{round(final_W/10, 1)} см", ha='right', va='center', color='red', weight='bold', size=12)
-    ax.text(start_x / 2.0, final_W / 4.0, "Торец 1\n(из отхода)", ha='center', color='green', size=9)
-    ax.text(final_L - start_x / 2.0, 3 * final_W / 4.0, "Торец 2\n(из отхода)", ha='center', color='green', size=9)
+    ax.text(clean_start_x / 2.0, final_W / 4.0, "Торец 1\n(из отхода)", ha='center', color='green', size=9)
+    ax.text(final_L - clean_start_x / 2.0, 3 * final_W / 4.0, "Торец 2\n(из отхода)", ha='center', color='green', size=9)
     plt.xlim(-150, final_L + 150)
     plt.ylim(-100, final_W + 120)
 
@@ -127,7 +128,6 @@ elif part_type == "🦋 Центр — «Бабочка»":
     plt.ylim(-100, final_W + 120)
 
 else:
-    #🔺 ТОРЦЕВОЙ ТРЕУГОЛЬНИК
     final_L = round(B, 1)
     final_W = round(h_tri + single_pripusk, 1)
     st.success(f"📋 **РАЗМЕР ЛИСТА ДЛЯ ОДНОГО ТРЕУГОЛЬНИКА: {round(final_L/10, 1)} см х {round(final_W/10, 1)} см**")
