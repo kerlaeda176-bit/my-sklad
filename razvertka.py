@@ -40,13 +40,11 @@ if part_type == "📋 Полный раскрой":
     st.success(f"📦 **ОБЩИЙ ОТРЕЗ: {round(final_L/10, 1)} см х {round(final_W/10, 1)} см**")
     ax.add_patch(patches.Rectangle((0, 0), final_L, final_W, linewidth=2, edgecolor='red', facecolor='none', linestyle='--'))
     
-    # Контур Бабочки
+    # Контур Бабочки по центру
     ax.add_patch(patches.Rectangle((klepki, single_pripusk), K + 2 * h_tri, 2 * h_trap, linewidth=1.5, edgecolor='black', facecolor='#f9f9f2'))
-    
-    # ТОЧНАЯ ПРИВЯЗКА СИНЕЙ ЛИНИИ К ВЕРШИНАМ КОНВЕРТА
     ax.plot([klepki + half_base_trap, klepki + half_base_trap + K], [final_W/2, final_W/2], color='blue', linewidth=3)
     
-    # Линии граней
+    # Линии конверта Бабочки
     ax.plot([klepki, final_L - klepki], [single_pripusk, single_pripusk], color='black', linewidth=1.5)
     ax.plot([klepki, klepki + half_base_trap], [single_pripusk, final_W/2], color='black', linewidth=1.2)
     ax.plot([final_L - klepki, final_L - klepki - half_base_trap], [single_pripusk, final_W/2], color='black', linewidth=1.2)
@@ -54,20 +52,22 @@ if part_type == "📋 Полный раскрой":
     ax.plot([klepki, klepki + half_base_trap], [final_W - single_pripusk, final_W/2], color='black', linewidth=1.2)
     ax.plot([final_L - klepki, final_L - klepki - half_base_trap], [final_W - single_pripusk, final_W/2], color='black', linewidth=1.2)
     
-    # Треугольники по бокам
-    ax.fill([0, klepki, 0], [0, 0, final_W/2], color='#e2efda', alpha=0.7, edgecolor='green', linestyle=':')
-    ax.fill([final_L, final_L - klepki, final_L], [final_W, final_W, final_W/2], color='#e2efda', alpha=0.7, edgecolor='green', linestyle=':')
+    # ИСПРАВЛЕНО: Треугольники развернуты и уложены СБОКУ в пустые зоны листа, где нет тела Бабочки
+    # Левый треугольник (в нижнем левом углу листа)
+    ax.fill([0, B, 0], [0, 0, h_tri], color='#e2efda', alpha=0.7, edgecolor='green', linestyle=':')
+    # Правый треугольник (в верхнем правом углу листа)
+    ax.fill([final_L, final_L - B, final_L], [final_W, final_W, final_W - h_tri], color='#e2efda', alpha=0.7, edgecolor='green', linestyle=':')
     
     ax.text(final_L/2.0, final_W + 20, f"ДЛИНА ОТРЕЗА: {round(final_L/10, 1)} см", ha='center', color='red', weight='bold', size=11)
     ax.text(final_L/2.0, 15, f"ШИРИНА ЛИСТА: {round(final_W/10, 1)} см", ha='center', color='red', weight='bold', size=11)
+    ax.text(B / 3.0, h_tri / 3.0, "Торец 1", ha='center', color='green', size=10, weight='bold')
+    ax.text(final_L - B / 3.0, final_W - h_tri / 3.0, "Торец 2", ha='center', color='green', size=10, weight='bold')
     plt.xlim(-50, final_L + 50)
     plt.ylim(-20, final_W + 60)
 
 elif part_type == "🦋 «Бабочка»":
     st.success(f"📋 **ЛИСТ БАБОЧКИ: {round(final_L/10, 1)} см х {round(final_W/10, 1)} см**")
     ax.add_patch(patches.Rectangle((0, 0), final_L, final_W, linewidth=2, edgecolor='red', facecolor='none', linestyle='--'))
-    
-    # Привязка синей линии в режиме Бабочки
     ax.plot([klepki + half_base_trap, klepki + half_base_trap + K], [final_W/2, final_W/2], color='blue', linewidth=3)
     
     ax.plot([klepki, final_L - klepki], [single_pripusk, single_pripusk], color='black', linewidth=1.5)
