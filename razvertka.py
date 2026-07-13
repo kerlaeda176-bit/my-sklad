@@ -36,7 +36,7 @@ fact_konek = 180.0 - (2 * angle_skat_side)
 fact_yubka_side = 90.0 + angle_skat_side
 fact_yubka_tri = 90.0 + angle_skat_tri
 
-# ПЕРЕСЧЕТ ПОД УГЛОМЕР СТАНКА (180 - факт + 10) С ОКРУГЛЕНИЕМ ДО ЦЕЛЫХ
+# ПЕРЕСЧЕТ ПОД УГЛОМЕР СТАНКА С ОКРУГЛЕНИЕМ ДО ЦЕЛЫХ ГРАДУСОВ
 stanko_konek = round(180.0 - fact_konek + 10.0)
 stanko_yubka_side = round(180.0 - fact_yubka_side + 10.0)
 stanko_yubka_tri = round(180.0 - fact_yubka_tri + 10.0)
@@ -58,7 +58,7 @@ ax.set_aspect('equal')
 # Крупный вывод главного результата отреза
 st.success(f"📦 **ОБЩИЙ ОТРЕЗ ОТ РУЛОНА ДЛЯ ВСЕХ ДЕТАЛЕЙ: {round(final_L/10, 1)} см х {round(final_W/10, 1)} см**")
 
-# ИСПРАВЛЕНО: ВЫВОД ГРАДУСОВ С НОВОЙ СТРОКИ И БЕЗ ДРОБЕЙ Специально под механический угломер
+# ЧЕТКИЙ ВЫВОД ЦЕЛЫХ ГРАДУСОВ ДЛЯ МЕХАНИЧЕСКОГО УГЛОМЕРА
 st.warning(f"🔧 **ГРАДУСЫ НА УГЛОМЕРЕ СТАНКА:**\n\n"
            f"• ГИБ КОНЬКА (ПО ЦЕНТРУ): **{stanko_konek}°**\n\n"
            f"• ГИБ БОКОВОЙ ЮБКИ (БАБОЧКА): **{stanko_yubka_side}°**\n\n"
@@ -78,7 +78,7 @@ if part_type == "🦋 Центр — «Бабочка»":
     ax.fill([0, klepki, klepki + half_base_trap, half_base_trap], [single_pripusk, single_pripusk, final_W/2, final_W/2], color='#d9e1f2', alpha=0.5, edgecolor='blue', linestyle='--')
     ax.fill([final_L, final_L - klepki, final_L - klepki - half_base_trap, final_L - half_base_trap], [single_pripusk, single_pripusk, final_W/2, final_W/2], color='#d9e1f2', alpha=0.5, edgecolor='blue', linestyle='--')
     ax.fill([0, klepki, klepki + half_base_trap, half_base_trap], [final_W - single_pripusk, final_W - single_pripusk, final_W/2, final_W/2], color='#d9e1f2', alpha=0.5, edgecolor='blue', linestyle='--')
-    ax.fill([final_L, final_L - klepki, final_L - klepki - half_base_trap, final_L - half_base_trap], [final_W - single_pripusk, final_W - single_pripusk, final_W/2, final_W/2], color='#d9e1f2', alpha=0.5, edgecolor='blue', linestyle='--')
+    ax.fill([final_L, final_L - klepki, final_L - klepki - half_base_trap, final_L - (final_W - single_pripusk)], [final_W - single_pripusk, final_W - single_pripusk, final_W/2, final_W/2], color='#d9e1f2', alpha=0.5, edgecolor='blue', linestyle='--')
 
     ax.plot([klepki, klepki], [0, single_pripusk], color='green', linewidth=3)
     ax.plot([final_L - klepki, final_L - klepki], [0, single_pripusk], color='green', linewidth=3)
@@ -105,6 +105,7 @@ if part_type == "🦋 Центр — «Бабочка»":
     plt.ylim(-20, final_W + 60)
 
 else:
+    # ТОРЦЕВОЙ ТРЕУГОЛЬНИК С БОКОВЫМИ УШКАМИ ДЛЯ КЛЕПОК ЮБКИ
     tri_L = round(B + 2 * klepki, 1)
     tri_W = round(h_tri + single_pripusk, 1)
     
@@ -114,7 +115,7 @@ else:
     ax.plot([klepki, tri_L - klepki], [single_pripusk, single_pripusk], color='black', linewidth=1.5)
     ax.plot([klepki, tri_L/2.0], [single_pripusk, tri_W], color='black', linewidth=1.5)
     ax.plot([tri_L - klepki, tri_L/2.0], [single_pripusk, tri_W], color='black', linewidth=1.5)
-    ax.plot([klepki, tri_L - clean_klepki := klepki], [single_pripusk + yubka, single_pripusk + yubka], color='black', linestyle=':', linewidth=1)
+    ax.plot([klepki, tri_L - klepki], [single_pripusk + yubka, single_pripusk + yubka], color='black', linestyle=':', linewidth=1)
     
     ax.fill([0, klepki, klepki, 0], [0, 0, single_pripusk, single_pripusk], color='#d9e1f2', alpha=0.5, edgecolor='blue', linestyle='--')
     ax.fill([tri_L, tri_L - klepki, tri_L - klepki, tri_L], [0, 0, single_pripusk, single_pripusk], color='#d9e1f2', alpha=0.5, edgecolor='blue', linestyle='--')
