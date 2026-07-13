@@ -44,6 +44,7 @@ mark_K = round(K / 10.0, 1)
 mark_A = round(A / 10.0, 1)
 mark_B = round(B / 10.0, 1)
 mark_klepki = round(klepki / 10.0, 1)
+mark_X1 = round((single_pripusk + klepki) / 10.0, 1)
 
 # Отрисовка чертежа в зависимости от выбранной детали
 fig, ax = plt.subplots(figsize=(6, 6))
@@ -51,9 +52,7 @@ ax.set_aspect('equal')
 
 if part_type == "🦋 Центр — «Бабочка»":
     # Расчет габаритов заготовки для Бабочки
-    # Длина заготовки = Длина основания (А) + 2 припуска под клепки
     final_L = round(A + 2 * klepki, 1)
-    # Ширина заготовки = 2 высоты боковых скатов + 2 припуска низа
     final_W = round(2 * h_trap + 2 * single_pripusk, 1)
     
     st.success(f"📋 **РАЗМЕР ЛИСТА ДЛЯ «БАБОЧКИ»: {round(final_L/10, 1)} см х {round(final_W/10, 1)} см**")
@@ -62,14 +61,13 @@ if part_type == "🦋 Центр — «Бабочка»":
     ax.add_patch(patches.Rectangle((0, 0), final_L, final_W, linewidth=2, edgecolor='red', facecolor='none', linestyle='--'))
     
     # Линии гиба конька по центру
-    ax.plot([klepki + half_base_trap, klepki + half_base_trap + K], [final_W/2, final_W/2], color='blue', linewidth=3, label='Конек')
+    ax.plot([klepki + half_base_trap, klepki + half_base_trap + K], [final_W/2, final_W/2], color='blue', linewidth=3)
     
     # Контур двух трапеций (вверх и вниз от конька)
-    # Нижняя трапеция
-    ax.plot([klepki, final_L - klepki], [single_pripusk, start_y := single_pripusk], color='black', linewidth=1.5)
+    ax.plot([klepki, final_L - klepki], [single_pripusk, single_pripusk], color='black', linewidth=1.5)
     ax.plot([klepki, klepki + half_base_trap], [single_pripusk, final_W/2], color='black', linewidth=1.2)
     ax.plot([final_L - klepki, final_L - klepki - half_base_trap], [single_pripusk, final_W/2], color='black', linewidth=1.2)
-    # Верхняя трапеция
+    
     ax.plot([klepki, final_L - klepki], [final_W - single_pripusk, final_W - single_pripusk], color='black', linewidth=1.5)
     ax.plot([klepki, klepki + half_base_trap], [final_W - single_pripusk, final_W/2], color='black', linewidth=1.2)
     ax.plot([final_L - klepki, final_L - klepki - half_base_trap], [final_W - single_pripusk, final_W/2], color='black', linewidth=1.2)
@@ -90,15 +88,19 @@ if part_type == "🦋 Центр — «Бабочка»":
     ax.plot([klepki, klepki], [final_W - single_pripusk, final_W], color='green', linewidth=3)
     ax.plot([final_L - klepki, final_L - klepki], [final_W - single_pripusk, final_W], color='green', linewidth=3)
 
-    # Нанесение размеров для Бабочки
-    t_y = final_W - single_pripusk / 2.0
-    ax.text(klepki / 2.0, t_y, f"{mark_klepki}", ha='center', va='center', color='green', weight='bold', size=11)
-    ax.text(klepki + half_base_trap / 2.0, t_y, f"{mark_X2}", ha='center', va='center', color='black', weight='bold', size=11)
-    ax.text(klepki + half_base_trap + K / 2.0, t_y, f"{mark_K}", ha='center', va='center', color='blue', weight='bold', size=12)
+    # Исправленное нанесение размеров для Бабочки (заменили mark_X2 на mark_H_tri)
+    text_y_pos = final_W - single_pripusk / 2.0
+    ax.text(klepki / 2.0, text_y_pos, f"{mark_klepki}", ha='center', va='center', color='green', weight='bold', size=12)
+    ax.text(klepki + half_base_trap / 2.0, text_y_pos, f"{mark_H_tri}", ha='center', va='center', color='black', weight='bold', size=12)
+    ax.text(klepki + half_base_trap + K / 2.0, text_y_pos, f"{mark_K}", ha='center', va='center', color='blue', weight='bold', size=13)
+    ax.text(klepki + half_base_trap + K + half_base_trap / 2.0, text_y_pos, f"{mark_H_tri}", ha='center', va='center', color='black', weight='bold', size=12)
+    ax.text(final_L - klepki / 2.0, text_y_pos, f"{mark_klepki}", ha='center', va='center', color='green', weight='bold', size=12)
     
-    t_x = klepki + 20
-    ax.text(t_x, single_pripusk / 2.0, f"{mark_Y1}", ha='center', va='center', color='green', weight='bold', size=11)
-    ax.text(t_x, single_pripusk + h_trap / 2.0, f"{mark_H_side}", ha='center', va='center', color='black', weight='bold', size=11)
+    text_x_pos = klepki / 2.0
+    ax.text(text_x_pos, single_pripusk / 2.0, f"{mark_Y1}", ha='center', va='center', color='green', weight='bold', size=12)
+    ax.text(text_x_pos, single_pripusk + h_trap / 2.0, f"{mark_H_side}", ha='center', va='center', color='black', weight='bold', size=12)
+    ax.text(text_x_pos, single_pripusk + h_trap + h_trap / 2.0, f"{mark_H_side}", ha='center', va='center', color='black', weight='bold', size=12)
+    ax.text(text_x_pos, final_W - single_pripusk / 2.0, f"{mark_Y1}", ha='center', va='center', color='green', weight='bold', size=12)
 
     ax.text(final_L/2.0, final_W + 35, f"ДЛИНА БАБОЧКИ: {round(final_L/10, 1)} см", ha='center', color='red', weight='bold', size=12)
     ax.text(-35, final_W/2.0, f"ШИРИНА БАБОЧКИ:\n{round(final_W/10, 1)} см", ha='right', va='center', color='red', weight='bold', size=12)
@@ -107,28 +109,23 @@ if part_type == "🦋 Центр — «Бабочка»":
 
 else:
     # РАСЧЕТ И ОТРИСОВКА ОТДЕЛЬНОГО ТОРЦЕВОГО ТРЕУГОЛЬНИКА
-    # Длина заготовки под треугольник = Ширина основания (В)
     final_L = round(B, 1)
-    # Ширина заготовки под треугольник = Высота торцевого ската + 1 припуск низа
     final_W = round(h_tri + single_pripusk, 1)
     
     st.success(f"📋 **РАЗМЕР ЛИСТА ДЛЯ ОДНОГО ТРЕУГОЛЬНИКА: {round(final_L/10, 1)} см х {round(final_W/10, 1)} см**")
     
-    # Красный контур заготовки
     ax.add_patch(patches.Rectangle((0, 0), final_L, final_W, linewidth=2, edgecolor='red', facecolor='none', linestyle='--'))
     
-    # Прорисовка самого треугольника ската
     ax.plot([0, final_L], [single_pripusk, single_pripusk], color='black', linewidth=1.5)
     ax.plot([0, final_L/2.0], [single_pripusk, final_W], color='black', linewidth=1.5)
     ax.plot([final_L, final_L/2.0], [single_pripusk, final_W], color='black', linewidth=1.5)
     
-    # Линия гиба юбки низа
     ax.plot([0, final_L], [single_pripusk + yubka, single_pripusk + yubka], color='black', linestyle=':', linewidth=1)
     
-    # Нанесение размеров для треугольника
-    ax.text(final_L / 4.0, final_W - 30, f"{round(mark_B/2, 1)}", ha='center', color='black', weight='bold', size=11)
-    ax.text(final_L / 2.0, single_pripusk + h_tri / 2.0, f"{mark_H_tri}", ha='center', color='black', weight='bold', size=11)
-    ax.text(final_L / 2.0, single_pripusk / 2.0, f"{mark_Y1}", ha='center', color='green', weight='bold', size=11)
+    # Разметка для треугольника
+    ax.text(final_L / 4.0, single_pripusk + 20, f"{round(mark_B/2, 1)}", ha='center', color='black', weight='bold', size=12)
+    ax.text(final_L / 2.0, single_pripusk + h_tri / 2.0, f"{mark_H_tri}", ha='center', color='black', weight='bold', size=12)
+    ax.text(final_L / 2.0, single_pripusk / 2.0, f"{mark_Y1}", ha='center', color='green', weight='bold', size=12)
     
     ax.text(final_L/2.0, final_W + 35, f"ОСНОВАНИЕ ТРЕУГОЛЬНИКА: {round(final_L/10, 1)} см", ha='center', color='red', weight='bold', size=12)
     ax.text(-35, final_W/2.0, f"ВЫСОТА ЗАГОТОВКИ:\n{round(final_W/10, 1)} см", ha='right', va='center', color='red', weight='bold', size=12)
