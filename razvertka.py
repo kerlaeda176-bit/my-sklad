@@ -76,21 +76,22 @@ ax.plot([0, start_x], [start_y + 2 * h_trap, start_y + 2 * h_trap], color='green
 ax.plot([final_L - start_x, final_L], [start_y, start_y], color='green', linewidth=3)
 ax.plot([final_L - start_x, final_L], [start_y + 2 * h_trap, start_y + 2 * h_trap], color='green', linewidth=3)
 
-# Цепочка размеров для рулетки
-text_y_pos = final_W - start_y / 2.0
-ax.text(start_x / 2.0, text_y_pos, f"{mark_X1}\nсм", ha='center', va='center', color='green', weight='bold', size=11)
-ax.text(start_x + h_tri / 2.0, text_y_pos, f"{mark_X2}\nсм", ha='center', va='center', color='black', weight='bold', size=11)
-ax.text(start_x + h_tri + K / 2.0, text_y_pos, f"{mark_K}\nсм", ha='center', va='center', color='blue', weight='bold', size=11)
-ax.text(start_x + h_tri + K + h_tri / 2.0, text_y_pos, f"{mark_X2}\nсм", ha='center', va='center', color='black', weight='bold', size=11)
-ax.text(final_L - start_x / 2.0, text_y_pos, f"{mark_X1}\nсм", ha='center', va='center', color='green', weight='bold', size=11)
+    # Исправленная цепочка размеров специально под экран телефона (убрали "см", добавили разнос)
+    text_y_pos = final_W - start_y / 2.0
+    ax.text(start_x / 2.0, text_y_pos, f"{mark_X1}", ha='center', va='center', color='green', weight='bold', size=12)
+    ax.text(start_x + h_tri / 2.0, text_y_pos, f"{mark_X2}", ha='center', va='center', color='black', weight='bold', size=12)
+    ax.text(start_x + h_tri + K / 2.0, text_y_pos, f"{mark_K}", ha='center', va='center', color='blue', weight='bold', size=13)
+    ax.text(start_x + h_tri + K + h_tri / 2.0, text_y_pos, f"{mark_X2}", ha='center', va='center', color='black', weight='bold', size=12)
+    ax.text(final_L - start_x / 2.0, text_y_pos, f"{mark_X1}", ha='center', va='center', color='green', weight='bold', size=12)
+    
+    text_x_pos = start_x / 2.0
+    ax.text(text_x_pos, start_y / 2.0, f"{mark_Y1}", ha='center', va='center', color='green', weight='bold', size=12)
+    ax.text(text_x_pos, start_y + h_trap / 2.0, f"{mark_H_side}", ha='center', va='center', color='black', weight='bold', size=12)
+    ax.text(text_x_pos, start_y + h_trap + h_trap / 2.0, f"{mark_H_side}", ha='center', va='center', color='black', weight='bold', size=12)
+    ax.text(text_x_pos, final_W - start_y / 2.0, f"{mark_Y1}", ha='center', va='center', color='green', weight='bold', size=12)
+    
+    plt.xlim(-180, final_L + 180)
+    plt.ylim(-120, final_W + 120)
+    plt.axis('off')
+    st.pyplot(fig)
 
-text_x_pos = start_x / 2.0
-ax.text(text_x_pos, start_y / 2.0, f"{mark_Y1} см", ha='center', va='center', color='green', weight='bold', size=11)
-ax.text(text_x_pos, start_y + h_trap / 2.0, f"{mark_H_side} см", ha='center', va='center', color='black', weight='bold', size=11)
-ax.text(text_x_pos, start_y + h_trap + h_trap / 2.0, f"{mark_H_side} см", ha='center', va='center', color='black', weight='bold', size=11)
-ax.text(text_x_pos, final_W - start_y / 2.0, f"{mark_Y1} см", ha='center', va='center', color='green', weight='bold', size=11)
-
-plt.xlim(-180, final_L + 180)
-plt.ylim(-120, final_W + 120)
-plt.axis('off')
-st.pyplot(fig)
