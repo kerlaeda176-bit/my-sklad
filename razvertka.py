@@ -4,7 +4,7 @@ import matplotlib.patches as patches
 import math
 
 st.set_page_config(page_title="Развёртка", layout="centered")
-st.title("📐 Мобильный Раскрой: Бабочка + 2 Торца")
+st.title("📐 Мобильный Раскрой: Бабочка + Углы Гиба")
 
 # ОСТАВЛЯЕМ ДВА ПОНЯТНЫХ ЦЕХОВЫХ РЕЖИМА БЕЗ ПУТАНИЦЫ
 part_type = st.radio("Что размечаем?", ("🦋 Центр — «Бабочка»", "🔺 Торец — Треугольник (нужно 2 шт)"))
@@ -27,6 +27,17 @@ half_base_trap = (A - K) / 2.0 if A > K else 1.0
 h_trap = round(math.sqrt(H**2 + (B / 2.0)**2), 1) if B > 0 else 0
 h_tri = round(math.sqrt(H**2 + half_base_trap**2), 1)
 
+# --- 📐 ЧУДО-РАСЧЕТ ТОЧНЫХ УГЛОВ ГИБА (В ГРАДУСАХ) ---
+# 1. Угол наклона бокового ската (Бабочки) относительно горизонтали
+angle_skat_side = math.degrees(math.atan(H / (B / 2.0))) if B > 0 else 0
+# 2. Угол наклона торцевого ската (Треугольника) относительно горизонтали
+angle_skat_tri = math.degrees(math.atan(H / half_base_trap)) if half_base_trap > 0 else 0
+
+# 3. Угол завала юбки (чтобы юбка свисала строго вертикально вниз)
+# На листогибе угол догиба юбки от плоскости листа равен: 90 градусов + угол наклона самого ската
+angle_yubka_side = 90.0 + angle_skat_side
+angle_yubka_tri = 90.0 + angle_skat_tri
+
 # Перевод в сантиметры для рулетки
 mark_Y1 = round(single_pripusk / 10.0, 1)
 mark_H_side = round(h_trap / 10.0, 1)
@@ -40,8 +51,16 @@ final_W = round(2 * h_trap + 2 * single_pripusk, 1)
 
 fig, ax = plt.subplots(figsize=(6, 6))
 ax.set_aspect('equal')
+
+# КРУПНО ПИШЕМ ОБЩИЙ РАЗМЕР КУСКА И УГЛЫ
 st.success(f"📦 **ОБЩИЙ ОТРЕЗ ОТ РУЛОНА ДЛЯ ВСЕХ ДЕТАЛЕЙ: {round(final_L/10, 1)} см х {round(final_W/10, 1)} см**")
-st.info("💡 Отрежьте этот лист. Разметьте Бабочку по схеме ниже, а 2 торцевых треугольника вырежьте из пустых боковых углов!")
+
+# ВЫВОД ГРАДУСОВ НА ЭКРАН ТЕЛЕФОНА
+st.warning(f"📐 **ГРАДУСЫ ДЛЯ НАСТРОЙКИ ЛИСТОГИБА:**\n\n"
+           f"• **Купол Бабочки (боковые скаты):** угол наклона **{round(angle_skat_side, 1)}°**\n"
+           f"• **Гиб боковой юбки:** повернуть на **{round(angle_yubka_side, 1)}°** (относительно полки ската)\n\n"
+           f"• **Торцевые треугольники:** угол наклона ската **{round(angle_skat_tri, 1)}°**\n"
+           f"• **Гиб торцевой юбки:** повернуть на **{round(angle_yubka_tri, 1)}°**")
 
 if part_type == "🦋 Центр — «Бабочка»":
     ax.add_patch(patches.Rectangle((0, 0), final_L, final_W, linewidth=2, edgecolor='red', facecolor='none', linestyle='--'))
@@ -74,8 +93,8 @@ if part_type == "🦋 Центр — «Бабочка»":
     
     text_x = klepki / 2.0
     ax.text(text_x, single_pripusk / 2.0, f"{mark_Y1}", ha='center', va='center', color='green', weight='bold', size=12)
-    ax.text(text_x, single_pripusk + h_trap / 2.0, f"{mark_H_side}", ha='center', va='center', color='black', weight='bold', size=12)
-    ax.text(text_x, single_pripusk + h_trap + h_trap / 2.0, f"{mark_H_side}", ha='center', va='center', color='black', weight='bold', size=12)
+    ax.text(text_x, single_pripusk + h_trap / 2.0, f"{mark_H_side}", ha='center', color='black', weight='bold', size=12)
+    ax.text(text_x, single_pripusk + h_trap + h_trap / 2.0, f"{mark_H_side}", ha='center', color='black', weight='bold', size=12)
     ax.text(text_x, final_W - single_pripusk / 2.0, f"{mark_Y1}", ha='center', va='center', color='green', weight='bold', size=12)
 
     ax.text(final_L/2.0, final_W + 25, f"ДЛИНА БАБОЧКИ: {round(final_L/10, 1)} см", ha='center', color='red', weight='bold', size=11)
@@ -84,29 +103,23 @@ if part_type == "🦋 Центр — «Бабочка»":
     plt.ylim(-20, final_W + 60)
 
 else:
-    # ИСПРАВЛЕННЫЙ ТОРЦЕВОЙ ТРЕУГОЛЬНИК С БОКОВЫМИ ПРИПУСКАМИ ЮБКИ
-    # Габарит заготовки увеличивается на ширину двух боковых ушек клепок (по 38 мм с каждой стороны)
     tri_L = round(B + 2 * klepki, 1)
     tri_W = round(h_tri + single_pripusk, 1)
     
     st.success(f"📋 **ЛИСТ ТРЕУГОЛЬНИКА С УШКАМИ: {round(tri_L/10, 1)} см х {round(tri_W/10, 1)} см**")
     ax.add_patch(patches.Rectangle((0, 0), tri_L, tri_W, linewidth=2, edgecolor='red', facecolor='none', linestyle='--'))
     
-    # Сдвигаем чистый треугольник на ширину ушка клепок вправо
     ax.plot([klepki, tri_L - klepki], [single_pripusk, single_pripusk], color='black', linewidth=1.5)
     ax.plot([klepki, tri_L/2.0], [single_pripusk, tri_W], color='black', linewidth=1.5)
     ax.plot([tri_L - klepki, tri_L/2.0], [single_pripusk, tri_W], color='black', linewidth=1.5)
     ax.plot([klepki, tri_L - klepki], [single_pripusk + yubka, single_pripusk + yubka], color='black', linestyle=':', linewidth=1)
     
-    # 🌟 Синие боковые ушки шва под заклепки в зоне юбки (справа и слева от 7.0 см)
     ax.fill([0, klepki, klepki, 0], [0, 0, single_pripusk, single_pripusk], color='#d9e1f2', alpha=0.5, edgecolor='blue', linestyle='--')
     ax.fill([tri_L, tri_L - klepki, tri_L - klepki, tri_L], [0, 0, single_pripusk, single_pripusk], color='#d9e1f2', alpha=0.5, edgecolor='blue', linestyle='--')
     
-    # Зеленые линии отреза ушек
     ax.plot([klepki, klepki], [0, single_pripusk], color='green', linewidth=3)
     ax.plot([tri_L - klepki, tri_L - klepki], [0, single_pripusk], color='green', linewidth=3)
     
-    # Нанесение размеров
     text_y = tri_W - 20
     ax.text(klepki / 2.0, single_pripusk / 2.0, f"{mark_klepki}", ha='center', va='center', color='blue', weight='bold', size=11)
     ax.text(tri_L / 2.0, single_pripusk - 20, f"{round(mark_B/2, 1)}", ha='center', color='black', weight='bold', size=12)
