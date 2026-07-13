@@ -6,37 +6,42 @@ import math
 st.set_page_config(page_title="Развёртка", layout="centered")
 st.title("📐 Мобильный Раскрой: Бабочка + Углы Гиба")
 
+# НАСТРОЙКА ИНТЕРФЕЙСА ДЛЯ СМАРТФОНА
 part_type = st.radio("Что размечаем?", ("🦋 Центр — «Бабочка»", "🔺 Торец — Треугольник (нужно 2 шт)"))
 
+# БЛОК ВВОДНЫХ РАЗМЕРОВ
 c1, c2 = st.columns(2)
-A = c1.number_input("Длина основания (А), мм", min_value=0, value=880, step=10)
-B = c2.number_input("Ширина основания (В), мм", min_value=0, value=760, step=10)
+A = c1.number_input("Длина основания (А), мм", min_value=0, value=1180, step=10)
+B = c2.number_input("Ширина основания (В), мм", min_value=0, value=780, step=10)
 H = c1.number_input("Высота конька (Н), мм", min_value=0, value=240, step=10)
-K = c2.number_input("Длина конька (К), мм", min_value=0, value=120, step=10)
+K = c2.number_input("Длина конька (К), мм", min_value=0, value=400, step=10)
 
 yubka = c1.number_input("Юбка, мм", min_value=0, value=40, step=5)
 kapel = c2.number_input("Капельник, мм", min_value=0, value=20, step=5)
 valc = c1.number_input("Вальцовка, мм", min_value=0, value=10, step=5)
 klepki = c2.number_input("Шов клепок, мм", min_value=0, value=38, step=1)
 
+# Геометрия Пифагора
 single_pripusk = yubka + kapel + valc
 half_base_trap = (A - K) / 2.0 if A > K else 1.0
 h_trap = round(math.sqrt(H**2 + (B / 2.0)**2), 1) if B > 0 else 0
 h_tri = round(math.sqrt(H**2 + half_base_trap**2), 1)
 
-# Расчет углов
+# Расчет углов наклона скатов от горизонтали
 angle_skat_side = math.degrees(math.atan(H / (B / 2.0))) if B > 0 else 0
 angle_skat_tri = math.degrees(math.atan(H / half_base_trap)) if half_base_trap > 0 else 0
 
+# Расчет чистых углов детали
 fact_konek = 180.0 - (2 * angle_skat_side)
 fact_yubka_side = 90.0 + angle_skat_side
 fact_yubka_tri = 90.0 + angle_skat_tri
 
-# Пересчет под ваш угломер станка (180 - факт + 10)
-stanko_konek = 180.0 - fact_konek + 10.0
-stanko_yubka_side = 180.0 - fact_yubka_side + 10.0
-stanko_yubka_tri = 180.0 - fact_yubka_tri + 10.0
+# ПЕРЕСЧЕТ ПОД УГЛОМЕР СТАНКА (180 - факт + 10) С ОКРУГЛЕНИЕМ ДО ЦЕЛЫХ
+stanko_konek = round(180.0 - fact_konek + 10.0)
+stanko_yubka_side = round(180.0 - fact_yubka_side + 10.0)
+stanko_yubka_tri = round(180.0 - fact_yubka_tri + 10.0)
 
+# Сантиметры для рулетки
 mark_Y1 = round(single_pripusk / 10.0, 1)
 mark_H_side = round(h_trap / 10.0, 1)
 mark_H_tri = round(h_tri / 10.0, 1)
@@ -50,12 +55,14 @@ final_W = round(2 * h_trap + 2 * single_pripusk, 1)
 fig, ax = plt.subplots(figsize=(6, 6))
 ax.set_aspect('equal')
 
+# Крупный вывод главного результата отреза
 st.success(f"📦 **ОБЩИЙ ОТРЕЗ ОТ РУЛОНА ДЛЯ ВСЕХ ДЕТАЛЕЙ: {round(final_L/10, 1)} см х {round(final_W/10, 1)} см**")
 
-st.warning(f"🔧 **ЗНАЧЕНИЯ ДЛЯ ЭКРАНА УГЛОМЕРА ЛИСТОГИБА:**\n\n"
-           f"• **При гибе конька (по центру):** выставить на датчике **{round(stanko_konek, 1)}°**\n"
-           f"• **При гибе боковой юбки (Бабочка):** выставить на датчике **{round(stanko_yubka_side, 1)}°**\n"
-           f"• **При гибе торцевой юбки (Треугольник):** выставить на датчике **{round(stanko_yubka_tri, 1)}°**")
+# ИСПРАВЛЕНО: ВЫВОД ГРАДУСОВ С НОВОЙ СТРОКИ И БЕЗ ДРОБЕЙ Специально под механический угломер
+st.warning(f"🔧 **ГРАДУСЫ НА УГЛОМЕРЕ СТАНКА:**\n\n"
+           f"• ГИБ КОНЬКА (ПО ЦЕНТРУ): **{stanko_konek}°**\n\n"
+           f"• ГИБ БОКОВОЙ ЮБКИ (БАБОЧКА): **{stanko_yubka_side}°**\n\n"
+           f"• ГИБ ТОРЦЕВОЙ ЮБКИ (ТРЕУГОЛЬНИК): **{stanko_yubka_tri}°**")
 
 if part_type == "🦋 Центр — «Бабочка»":
     ax.add_patch(patches.Rectangle((0, 0), final_L, final_W, linewidth=2, edgecolor='red', facecolor='none', linestyle='--'))
@@ -107,7 +114,7 @@ else:
     ax.plot([klepki, tri_L - klepki], [single_pripusk, single_pripusk], color='black', linewidth=1.5)
     ax.plot([klepki, tri_L/2.0], [single_pripusk, tri_W], color='black', linewidth=1.5)
     ax.plot([tri_L - klepki, tri_L/2.0], [single_pripusk, tri_W], color='black', linewidth=1.5)
-    ax.plot([klepki, tri_L - klepki], [single_pripusk + yubka, single_pripusk + yubka], color='black', linestyle=':', linewidth=1)
+    ax.plot([klepki, tri_L - clean_klepki := klepki], [single_pripusk + yubka, single_pripusk + yubka], color='black', linestyle=':', linewidth=1)
     
     ax.fill([0, klepki, klepki, 0], [0, 0, single_pripusk, single_pripusk], color='#d9e1f2', alpha=0.5, edgecolor='blue', linestyle='--')
     ax.fill([tri_L, tri_L - klepki, tri_L - klepki, tri_L], [0, 0, single_pripusk, single_pripusk], color='#d9e1f2', alpha=0.5, edgecolor='blue', linestyle='--')
