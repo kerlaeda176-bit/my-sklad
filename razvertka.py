@@ -80,15 +80,16 @@ if part_type == "📋 Полный раскрой на одном листе":
     ax.fill([0, clean_start_x, 0], [0, 0, final_W/2], color='#e2efda', alpha=0.7, edgecolor='green', linestyle=':')
     ax.fill([final_L, final_L - clean_start_x, final_L], [final_W, final_W, final_W/2], color='#e2efda', alpha=0.7, edgecolor='green', linestyle=':')
     
-    ax.text(final_L/2.0, final_W + 35, f"ОТРЕЗ ОТ РУЛОНА: {round(final_L/10, 1)} см", ha='center', color='red', weight='bold', size=12)
-    ax.text(-35, final_W/2.0, f"ШИРИНА ШТРИПСА:\n{round(final_W/10, 1)} см", ha='right', va='center', color='red', weight='bold', size=12)
-    ax.text(clean_start_x / 2.0, final_W / 4.0, "Торец 1\n(из отхода)", ha='center', color='green', size=9)
-    ax.text(final_L - clean_start_x / 2.0, 3 * final_W / 4.0, "Торец 2\n(из отхода)", ha='center', color='green', size=9)
-    plt.xlim(-150, final_L + 150)
-    plt.ylim(-100, final_W + 120)
+    # ИСПРАВЛЕНО: убрали боковой текст, центрировали чертеж, а размеры вывели красиво сверху и снизу
+    ax.text(final_L/2.0, final_W + 20, f"ДЛИНА ОТРЕЗА: {round(final_L/10, 1)} см", ha='center', color='red', weight='bold', size=11)
+    ax.text(final_L/2.0, -25, f"ШИРИНА ЛИСТА: {round(final_W/10, 1)} см", ha='center', color='red', weight='bold', size=11)
+    ax.text(clean_start_x / 2.0, final_W / 4.0, "Торец 1\nиз отхода", ha='center', color='green', size=10)
+    ax.text(final_L - clean_start_x / 2.0, 3 * final_W / 4.0, "Торец 2\nиз отхода", ha='center', color='green', size=10)
+    plt.xlim(-50, final_L + 50)
+    plt.ylim(-60, final_W + 60)
 
 elif part_type == "🦋 Центр — «Бабочка»":
-    st.success(f"📋 **РАЗМЕР ЛИСТА ДЛЯ «БАБОЧКИ»: {round(final_L/10, 1)} см х {round(final_W/10, 1)} см**")
+    st.success(f"📋 **РАЗМЕР ЛИСТА ДЛЯ «БАБОЧКИ»: {round(final_L/10, 1)} см x {round(final_W/10, 1)} см**")
     ax.add_patch(patches.Rectangle((0, 0), final_L, final_W, linewidth=2, edgecolor='red', facecolor='none', linestyle='--'))
     ax.plot([klepki + half_base_trap, klepki + half_base_trap + K], [final_W/2, final_W/2], color='blue', linewidth=3)
     
@@ -123,9 +124,9 @@ elif part_type == "🦋 Центр — «Бабочка»":
     ax.text(text_x_pos, final_W - single_pripusk / 2.0, f"{mark_Y1}", ha='center', va='center', color='green', weight='bold', size=12)
 
     ax.text(final_L/2.0, final_W + 35, f"ДЛИНА БАБОЧКИ: {round(final_L/10, 1)} см", ha='center', color='red', weight='bold', size=12)
-    ax.text(-35, final_W/2.0, f"ШИРИНА БАБОЧКИ:\n{round(final_W/10, 1)} см", ha='right', va='center', color='red', weight='bold', size=12)
-    plt.xlim(-150, final_L + 150)
-    plt.ylim(-100, final_W + 120)
+    ax.text(final_L/2.0, -30, f"ШИРИНА БАБОЧКИ: {round(final_W/10, 1)} см", ha='center', color='red', weight='bold', size=12)
+    plt.xlim(-50, final_L + 50)
+    plt.ylim(-60, final_W + 60)
 
 else:
     final_L = round(B, 1)
@@ -142,9 +143,9 @@ else:
     ax.text(final_L / 2.0, single_pripusk / 2.0, f"{mark_Y1}", ha='center', color='green', weight='bold', size=12)
     
     ax.text(final_L/2.0, final_W + 35, f"ОСНОВАНИЕ ТРЕУГОЛЬНИКА: {round(final_L/10, 1)} см", ha='center', color='red', weight='bold', size=12)
-    ax.text(-35, final_W/2.0, f"ВЫСОТА ЗАГОТОВКИ:\n{round(final_W/10, 1)} см", ha='right', va='center', color='red', weight='bold', size=12)
-    plt.xlim(-120, final_L + 120)
-    plt.ylim(-100, final_W + 120)
+    ax.text(final_L/2.0, -30, f"ВЫСОТА ЗАГОТОВКИ: {round(final_W/10, 1)} см", ha='center', color='red', weight='bold', size=12)
+    plt.xlim(-50, final_L + 50)
+    plt.ylim(-60, final_W + 60)
 
 plt.axis('off')
 st.pyplot(fig)
