@@ -40,15 +40,11 @@ final_W = round(2 * h_trap + 2 * single_pripusk, 1)
 
 fig, ax = plt.subplots(figsize=(6, 6))
 ax.set_aspect('equal')
-
-# КРУПНО ПИШЕМ ОБЩИЙ РАЗМЕР КУСКА ДЛЯ ОТРЕЗА ОТ РУЛОНА
 st.success(f"📦 **ОБЩИЙ ОТРЕЗ ОТ РУЛОНА ДЛЯ ВСЕХ ДЕТАЛЕЙ: {round(final_L/10, 1)} см х {round(final_W/10, 1)} см**")
 st.info("💡 Отрежьте этот лист. Разметьте Бабочку по схеме ниже, а 2 торцевых треугольника вырежьте из пустых боковых углов!")
 
 if part_type == "🦋 Центр — «Бабочка»":
     ax.add_patch(patches.Rectangle((0, 0), final_L, final_W, linewidth=2, edgecolor='red', facecolor='none', linestyle='--'))
-    
-    # ИСПРАВЛЕНО: синяя линия конька лежит строго между углами конверта трапеций
     ax.plot([klepki + half_base_trap, klepki + half_base_trap + K], [final_W/2, final_W/2], color='blue', linewidth=3)
     
     ax.plot([klepki, final_L - klepki], [single_pripusk, single_pripusk], color='black', linewidth=1.5)
@@ -68,7 +64,6 @@ if part_type == "🦋 Центр — «Бабочка»":
     ax.plot([klepki, klepki], [final_W - single_pripusk, final_W], color='green', linewidth=3)
     ax.plot([final_L - klepki, final_L - klepki], [final_W - single_pripusk, final_W], color='green', linewidth=3)
 
-    # ИСПРАВЛЕНО: Теперь выводится чистый полуконек основания (A - K)/2 = 38.0 см вместо 44.9 см
     half_base_cm = round(half_base_trap / 10.0, 1)
     text_y = final_W - single_pripusk / 2.0
     ax.text(klepki / 2.0, text_y, f"{mark_klepki}", ha='center', va='center', color='green', weight='bold', size=12)
@@ -89,23 +84,40 @@ if part_type == "🦋 Центр — «Бабочка»":
     plt.ylim(-20, final_W + 60)
 
 else:
-    # 🔺 ТОРЦЕВОЙ ТРЕУГОЛЬНИК
-    final_L = round(B, 1)
-    final_W = round(h_tri + single_pripusk, 1)
-    st.success(f"📋 **ЛИСТ ТРЕУГОЛЬНИКА: {round(final_L/10, 1)} см х {round(final_W/10, 1)} см**")
-    ax.add_patch(patches.Rectangle((0, 0), final_L, final_W, linewidth=2, edgecolor='red', facecolor='none', linestyle='--'))
-    ax.plot([0, final_L], [single_pripusk, single_pripusk], color='black', linewidth=1.5)
-    ax.plot([0, final_L/2.0], [single_pripusk, final_W], color='black', linewidth=1.5)
-    ax.plot([final_L, final_L/2.0], [single_pripusk, final_W], color='black', linewidth=1.5)
+    # ИСПРАВЛЕННЫЙ ТОРЦЕВОЙ ТРЕУГОЛЬНИК С БОКОВЫМИ ПРИПУСКАМИ ЮБКИ
+    # Габарит заготовки увеличивается на ширину двух боковых ушек клепок (по 38 мм с каждой стороны)
+    tri_L = round(B + 2 * klepki, 1)
+    tri_W = round(h_tri + single_pripusk, 1)
     
-    ax.text(final_L / 2.0, single_pripusk - 20, f"{round(mark_B/2, 1)}", ha='center', color='black', weight='bold', size=12)
-    ax.text(final_L / 2.0, single_pripusk + h_tri / 2.0, f"{mark_H_tri}", ha='center', color='black', weight='bold', size=12)
-    ax.text(final_L / 2.0, single_pripusk / 2.0, f"{mark_Y1}", ha='center', color='green', weight='bold', size=12)
+    st.success(f"📋 **ЛИСТ ТРЕУГОЛЬНИКА С УШКАМИ: {round(tri_L/10, 1)} см х {round(tri_W/10, 1)} см**")
+    ax.add_patch(patches.Rectangle((0, 0), tri_L, tri_W, linewidth=2, edgecolor='red', facecolor='none', linestyle='--'))
     
-    ax.text(final_L/2.0, final_W + 25, f"ОСНОВАНИЕ ТРЕУГОЛЬНИКА: {round(final_L/10, 1)} см", ha='center', color='red', weight='bold', size=11)
-    ax.text(final_L/2.0, 15, f"ВЫСОТА ЗАГОТОВКИ: {round(final_W/10, 1)} см", ha='center', color='red', weight='bold', size=11)
-    plt.xlim(-50, final_L + 50)
-    plt.ylim(-20, final_W + 60)
+    # Сдвигаем чистый треугольник на ширину ушка клепок вправо
+    ax.plot([klepki, tri_L - klepki], [single_pripusk, single_pripusk], color='black', linewidth=1.5)
+    ax.plot([klepki, tri_L/2.0], [single_pripusk, tri_W], color='black', linewidth=1.5)
+    ax.plot([tri_L - klepki, tri_L/2.0], [single_pripusk, tri_W], color='black', linewidth=1.5)
+    ax.plot([klepki, tri_L - klepki], [single_pripusk + yubka, single_pripusk + yubka], color='black', linestyle=':', linewidth=1)
+    
+    # 🌟 Синие боковые ушки шва под заклепки в зоне юбки (справа и слева от 7.0 см)
+    ax.fill([0, klepki, klepki, 0], [0, 0, single_pripusk, single_pripusk], color='#d9e1f2', alpha=0.5, edgecolor='blue', linestyle='--')
+    ax.fill([tri_L, tri_L - klepki, tri_L - klepki, tri_L], [0, 0, single_pripusk, single_pripusk], color='#d9e1f2', alpha=0.5, edgecolor='blue', linestyle='--')
+    
+    # Зеленые линии отреза ушек
+    ax.plot([klepki, klepki], [0, single_pripusk], color='green', linewidth=3)
+    ax.plot([tri_L - klepki, tri_L - klepki], [0, single_pripusk], color='green', linewidth=3)
+    
+    # Нанесение размеров
+    text_y = tri_W - 20
+    ax.text(klepki / 2.0, single_pripusk / 2.0, f"{mark_klepki}", ha='center', va='center', color='blue', weight='bold', size=11)
+    ax.text(tri_L / 2.0, single_pripusk - 20, f"{round(mark_B/2, 1)}", ha='center', color='black', weight='bold', size=12)
+    ax.text(tri_L / 2.0, single_pripusk + h_tri / 2.0, f"{mark_H_tri}", ha='center', color='black', weight='bold', size=12)
+    ax.text(tri_L / 2.0, single_pripusk / 2.0, f"{mark_Y1}", ha='center', color='green', weight='bold', size=12)
+    ax.text(tri_L - klepki / 2.0, single_pripusk / 2.0, f"{mark_klepki}", ha='center', va='center', color='blue', weight='bold', size=11)
+    
+    ax.text(tri_L/2.0, tri_W + 20, f"ШИРИНА ЗАГОТОВКИ: {round(tri_L/10, 1)} см", ha='center', color='red', weight='bold', size=11)
+    ax.text(tri_L/2.0, 15, f"ВЫСОТА ЗАГОТОВКИ: {round(tri_W/10, 1)} см", ha='center', color='red', weight='bold', size=11)
+    plt.xlim(-50, tri_L + 50)
+    plt.ylim(-20, tri_W + 60)
 
 plt.axis('off')
 st.pyplot(fig)
