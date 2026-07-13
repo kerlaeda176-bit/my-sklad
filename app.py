@@ -1,10 +1,12 @@
 import streamlit as st
-import json
-import os
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+import math
 
-st.set_page_config(page_title="Склад Металла", page_icon="🏭", layout="centered")
+st.set_page_config(page_title="Склад и Развертка", page_icon="🏭", layout="centered")
 
-# Отключаем всплывающую клавиатуру для списков на мобильных устройствах
+# Отключаем всплывающую клавиатуру для списков выбора
 st.markdown(
     """
     <style>
@@ -16,115 +18,121 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.title("🏭 Мобильный Склад")
-st.write("Учет остатков в рулонах, листах и квадратных метрах")
+st.title("🏭 Мобильный Комплекс: Склад и Развертка")
 
-DB_FILE = "sklad_data.json"
+# Создаем две удобные вкладки на экране телефона
+tab1, tab2 = st.tabs(["📊 Учет Склада", "📐 Калькулятор Развертки"])
 
-# Используем глобальный кэш сервера, чтобы данные НЕ стирались при обновлении страницы на телефоне
-if 'global_sklad' not in st.session_state:
-    if os.path.exists(DB_FILE):
-        with open(DB_FILE, "r", encoding="utf-8") as f:
-            st.session_state.global_sklad = json.load(f)
-    else:
-        st.session_state.global_sklad = {}
-
-sklad_data = st.session_state.global_sklad
-
-# РАЗДЕЛ 1: ТЕКУЩИЕ ОСТАТКИ С ФИЛЬТРОМ
-st.header("📊 Остатки в цеху")
-
-color_options = ["🔍 Показать все цвета"] + list(sklad_data.keys())
-selected_filter = st.selectbox("🎯 Фильтр по цвету металла:", color_options)
-
-metals_to_show = sklad_data.keys() if selected_filter == "🔍 Показать все цвета" else [selected_filter]
-
-for metal in metals_to_show:
-    values = sklad_data[metal]
-    st.subheader(f"• {metal}")
-    col1, col2 = st.columns(2)
-    col1.metric("Площадь, м²", f"{values['м2']:.2f} м²")
+# ==========================================
+# ВКЛАДКА 1: ЧИСТЫЙ ОНЛАЙН СКЛАД
+# ==========================================
+with tab1:
+    st.header("📦 Текущие Остатки")
+    # (Здесь используется базовая копия склада в памяти, пока вы не привяжете вашу Google Таблицу)
+    if 'sklad' not in st.session_state:
+        st.session_state.sklad = {
+            "RAL 7024 (Серый графит) Глянцевый": {"м2": 150.28, "тип": "рулон", "базовая_длина": 10},
+            "RAL 8017 (Шоколад) Глянцевый": {"м2": 49.53, "тип": "рулон", "базовая_длина": 12},
+            "RAL 9003 (Сигнально-белый) Глянцевый": {"м2": 7.17, "тип": "рулон", "базовая_длина": 12},
+            "Оцинкованная сталь (Цинк)": {"м2": 47.98, "тип": "рулон", "базовая_длина": 10},
+            "Нержавеющая сталь (AISI 304)": {"м2": 0.16, "тип": "лист_2х1", "базовая_длина": 2}
+        }
     
-    if values.get("тип") == "лист_2х1":
-        sheets_count = values["м2"] / 2.0
-        col2.metric("В листах (2х1м)", f"{sheets_count:.1f} шт")
-    else:
-        roll_len = values["базовая_длина"]
-        roll_area = roll_len * 1.25
-        rolls_count = values["м2"] / roll_area
-        col2.metric(f"В рулонах (по {roll_len}м)", f"{rolls_count:.1f} шт")
-st.write("---")
-
-# РАЗДЕЛ 2: ДОБАВЛЕНИЕ НОВОГО ЦВЕТА
-st.header("➕ Добавить новый цвет в базу")
-with st.form("new_color_form"):
-    new_name = st.text_input("Введите название металла/цвета")
-    mat_type = st.selectbox("Тип поставляемого материала:", ("Рулон со штрипсом 1.25м", "Штучный лист 2х1 метр"))
-    new_len = st.selectbox("Базовая длина рулона, метров (только для рулонов):", (12, 10))
-    start_m2 = st.number_input("Начальный остаток на складе, м²", min_value=0.0, step=0.1, value=0.0)
+    color_options = ["🔍 Показать все цвета"] + list(st.session_state.sklad.keys())
+    selected_filter = st.selectbox("🎯 Выберите цвет:", color_options)
+    metals_to_show = st.session_state.sklad.keys() if selected_filter == "🔍 Показать все цвета" else [selected_filter]
     
-    submitted_new = st.form_submit_button("Создать новый материал")
-    if submitted_new and new_name:
-        if new_name not in sklad_data:
-            t_type = "лист_2х1" if mat_type == "Штучный лист 2х1 метр" else "рулон"
-            st.session_state.global_sklad[new_name] = {"м2": start_m2, "тип": t_type, "базовая_длина": new_len}
-            st.success(f"Материал '{new_name}' успешно добавлен!")
-            st.rerun()
+    for metal in metals_to_show:
+        values = st.session_state.sklad[metal]
+        st.subheader(f"• {metal}")
+        col1, col2 = st.columns(2)
+        col1.metric("Площадь", f"{values['м2']:.2f} м²")
+        if "лист" in values.get("тип", ""):
+            col2.metric("Листы (2х1м)", f"{values['м2']/2.0:.1f} шт")
         else:
-            st.error("Этот материал уже есть в базе данных!")
-st.write("---")
+            col2.metric("Рулоны", f"{values['м2']/(values['базовая_длина']*1.25):.1f} шт")
 
-# РАЗДЕЛ 3: ОФОРМЛЕНИЕ ПРИХОДА
-st.header("📥 Оформить Приход")
-with st.form("income_form"):
-    chosen_metal = st.selectbox("Выберите металл для прихода", list(sklad_data.keys()))
-    is_sheet = sklad_data[chosen_metal].get("тип") == "лист_2х1"
+# ==========================================
+# ВКЛАДКА 2: ЧУДО-КАЛЬКУЛЯТОР ДЛЯ СМАРТФОНА
+# ==========================================
+with tab2:
+    st.header("📐 Расчет чертежа заготовки")
     
-    if is_sheet:
-        sheets = st.number_input("Количество пришедших ЛИСТОВ (2х1м), шт", min_value=0.0, step=1.0, value=0.0)
-    else:
-        rolls = st.number_input("Количество рулонов, шт", min_value=0.0, step=1.0, value=0.0)
-        length = st.selectbox("Длина пришедших рулонов, метров", (10, 12))
+    st.write("<b>⚙️ Размеры купола (в мм):</b>", unsafe_allow_html=True)
+    c1, c2 = st.columns(2)
+    A = c1.number_input("Длина основания (А), мм", min_value=0, value=1180, step=10)
+    B = c2.number_input("Ширина основания (В), мм", min_value=0, value=780, step=10)
+    H = c1.number_input("Высота конька (Н), мм", min_value=0, value=240, step=10)
+    K = c2.number_input("Длина конька (К), мм", min_value=0, value=400, step=10)
     
-    submitted_in = st.form_submit_button("Добавить металл на склад")
-    if submitted_in:
-        if is_sheet and sheets > 0:
-            added_m2 = sheets * 2.0
-            st.session_state.global_sklad[chosen_metal]["м2"] += added_m2
-            st.success(f"Добавлено {added_m2:.2f} м²!")
-            st.rerun()
-        elif not is_sheet and rolls > 0:
-            added_m2 = rolls * length * 1.25
-            st.session_state.global_sklad[chosen_metal]["м2"] += added_m2
-            st.success(f"Добавлено {added_m2:.2f} м²!")
-            st.rerun()
-st.write("---")
-
-# РАЗДЕЛ 4: РАСХОД ПО РАЗМЕРАМ ЗАГОТОВОК
-st.header("📤 Списать Расход")
-with st.form("outcome_form"):
-    chosen_metal_out = st.selectbox("Выберите металл для списания", list(sklad_data.keys()))
-    shape_type = st.radio("Форма детали:", ("Прямоугольная", "Трапеция"))
-    det_length = st.number_input("Чистая длина детали, мм", min_value=0, step=10, value=1000)
+    st.write("<b>🛠️ Припуски (в мм):</b>", unsafe_allow_html=True)
+    c3, c4 = st.columns(2)
+    yubka = c3.number_input("Юбка, мм", min_value=0, value=40, step=5)
+    kapel = c4.number_input("Капельник, мм", min_value=0, value=20, step=5)
+    valc = c3.number_input("Вальцовка, мм", min_value=0, value=10, step=5)
+    klepki = c4.number_input("Припуск на клепки, мм", min_value=0, value=38, step=1)
     
-    if shape_type == "Прямоугольная":
-        det_width = st.number_input("Ширина детали, мм", min_value=0, step=10, value=500, key="width_rect")
-        calculated_m2_single = (det_length * det_width) / 1000000.0
-    else:
-        det_width_1 = st.number_input("Ширина НИЖНЯЯ (Основание 1), мм", min_value=0, step=10, value=600, key="width_trap1")
-        det_width_2 = st.number_input("Ширина ВЕРХНЯЯ (Основание 2), мм", min_value=0, step=10, value=300, key="width_trap2")
-        calculated_m2_single = (((det_width_1 + det_width_2) / 2.0) * det_length) / 1000000.0
-        
-    det_count = st.number_input("Количество деталей, шт", min_value=1, step=1, value=1)
-    calculated_m2 = calculated_m2_single * det_count
+    # Математика Пифагора
+    single_pripusk = yubka + kapel + valc
+    half_base_trap = (A - K) / 2.0 if A > K else 1.0
+    h_trap = round(math.sqrt(H**2 + (B / 2.0)**2), 1) if B > 0 else 0
+    h_tri = round(math.sqrt(H**2 + half_base_trap**2), 1)
     
-    st.info(f"📐 Чистая расчетная площадь партии: {calculated_m2:.2f} м²")
+    final_L = round(K + 2 * h_tri + 2 * single_pripusk + 2 * klepki, 1)
+    final_W = round(2 * h_trap + 2 * single_pripusk, 1)
     
-    submitted_out = st.form_submit_button("Списать металл со склада")
-    if submitted_out:
-        if sklad_data[chosen_metal_out]["м2"] >= calculated_m2:
-            st.session_state.global_sklad[chosen_metal_out]["м2"] -= calculated_m2
-            st.success(f"Успешно списано {calculated_m2:.2f} м²!")
-            st.rerun()
-        else:
-            st.error(f"Ошибка! Не хватает металла.")
+    start_x = single_pripusk + klepki
+    start_y = single_pripusk
+    
+    # Сантиметры для разметки рулеткой
+    mark_X1 = round(start_x / 10.0, 1)
+    mark_X2 = round(h_tri / 10.0, 1)
+    mark_K  = round(K / 10.0, 1)
+    mark_Y1 = round(start_y / 10.0, 1)
+    mark_H_side = round(h_trap / 10.0, 1)
+    
+    st.success(f"📋 **ОТРЕЗАТЬ ОТ РУЛОНА: {round(final_L/10, 1)} см  х  {round(final_W/10, 1)} см**")
+    
+    # Строим график разметки прямо на экране смартфона
+    fig, ax = plt.subplots(figsize=(6, 6))
+    ax.set_aspect('equal')
+    
+    ax.add_patch(patches.Rectangle((0, 0), final_L, final_W, linewidth=2, edgecolor='red', facecolor='none', linestyle='--'))
+    ax.add_patch(patches.Rectangle((start_x, start_y), K + 2 * h_tri, 2 * h_trap, linewidth=1.5, edgecolor='black', facecolor='#f9f9f2'))
+    ax.add_patch(patches.Rectangle((start_x - yubka, start_y - yubka), K + 2 * h_tri + 2 * yubka, 2 * h_trap + 2 * yubka, linewidth=1, edgecolor='black', facecolor='none', linestyle=':'))
+    
+    # Конверт гиба
+    ax.plot([start_x, start_x + h_tri], [start_y, final_W/2], color='black', linewidth=1.2)
+    ax.plot([start_x, start_x + h_tri], [start_y + 2 * h_trap, final_W/2], color='black', linewidth=1.2)
+    ax.plot([start_x + h_tri + K, final_L - start_x], [final_W/2, start_y], color='black', linewidth=1.2)
+    ax.plot([start_x + h_tri + K, final_L - start_x], [final_W/2, start_y + 2 * h_trap], color='black', linewidth=1.2)
+    ax.plot([start_x + h_tri, start_x + h_tri + K], [final_W/2, final_W/2], color='blue', linewidth=3)
+    
+    # Зеленые резы
+    ax.plot([start_x, start_x], [0, start_y], color='green', linewidth=3)
+    ax.plot([start_x, start_x], [start_y + 2 * h_trap, final_W], color='green', linewidth=3)
+    ax.plot([final_L - start_x, final_L - start_x], [0, start_y], color='green', linewidth=3)
+    ax.plot([final_L - start_x, final_L - start_x], [start_y + 2 * h_trap, final_W], color='green', linewidth=3)
+    ax.plot([0, start_x], [start_y, start_y], color='green', linewidth=3)
+    ax.plot([0, start_x], [start_y + 2 * h_trap, start_y + 2 * h_trap], color='green', linewidth=3)
+    ax.plot([final_L - start_x, final_L], [start_y, start_y], color='green', linewidth=3)
+    ax.plot([final_L - start_x, final_L], [start_y + 2 * h_trap, start_y + 2 * h_trap], color='green', linewidth=3)
+    
+    # Наносим числа цепочки размеров
+    text_y_pos = final_W - start_y / 2.0
+    ax.text(start_x / 2.0, text_y_pos, f"{mark_X1}\nсм", ha='center', va='center', color='green', weight='bold', size=11)
+    ax.text(start_x + h_tri / 2.0, text_y_pos, f"{mark_X2}\nсм", ha='center', va='center', color='black', weight='bold', size=11)
+    ax.text(start_x + h_tri + K / 2.0, text_y_pos, f"{mark_K}\nсм", ha='center', va='center', color='blue', weight='bold', size=11)
+    ax.text(start_x + h_tri + K + h_tri / 2.0, text_y_pos, f"{mark_X2}\nсм", ha='center', va='center', color='black', weight='bold', size=11)
+    ax.text(final_L - start_x / 2.0, text_y_pos, f"{mark_X1}\nсм", ha='center', va='center', color='green', weight='bold', size=11)
+    
+    text_x_pos = start_x / 2.0
+    ax.text(text_x_pos, start_y / 2.0, f"{mark_Y1} см", ha='center', va='center', color='green', weight='bold', size=11)
+    ax.text(text_x_pos, start_y + h_trap / 2.0, f"{mark_H_side} см", ha='center', va='center', color='black', weight='bold', size=11)
+    ax.text(text_x_pos, start_y + h_trap + h_trap / 2.0, f"{mark_H_side} см", ha='center', va='center', color='black', weight='bold', size=11)
+    ax.text(text_x_pos, final_W - start_y / 2.0, f"{mark_Y1} см", ha='center', va='center', color='green', weight='bold', size=11)
+    
+    plt.xlim(-180, final_L + 180)
+    plt.ylim(-120, final_W + 120)
+    plt.axis('off')
+    st.pyplot(fig) # Выводим чертеж на экран телефона
