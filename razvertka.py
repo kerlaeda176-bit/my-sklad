@@ -6,10 +6,8 @@ import math
 st.set_page_config(page_title="Развёртка", layout="centered")
 st.title("📐 Мобильный Раскрой: Бабочка + Углы Гиба")
 
-# ОСТАВЛЯЕМ ДВА ПОНЯТНЫХ ЦЕХОВЫХ РЕЖИМА БЕЗ ПУТАНИЦЫ
 part_type = st.radio("Что размечаем?", ("🦋 Центр — «Бабочка»", "🔺 Торец — Треугольник (нужно 2 шт)"))
 
-# БЛОК ВВОДА РАЗМЕРОВ
 c1, c2 = st.columns(2)
 A = c1.number_input("Длина основания (А), мм", min_value=0, value=880, step=10)
 B = c2.number_input("Ширина основания (В), мм", min_value=0, value=760, step=10)
@@ -21,27 +19,24 @@ kapel = c2.number_input("Капельник, мм", min_value=0, value=20, step=
 valc = c1.number_input("Вальцовка, мм", min_value=0, value=10, step=5)
 klepki = c2.number_input("Шов клепок, мм", min_value=0, value=38, step=1)
 
-# Математика Пифагора
 single_pripusk = yubka + kapel + valc
 half_base_trap = (A - K) / 2.0 if A > K else 1.0
 h_trap = round(math.sqrt(H**2 + (B / 2.0)**2), 1) if B > 0 else 0
 h_tri = round(math.sqrt(H**2 + half_base_trap**2), 1)
 
-# Чистые углы наклона скатов от горизонтали
+# Расчет углов
 angle_skat_side = math.degrees(math.atan(H / (B / 2.0))) if B > 0 else 0
 angle_skat_tri = math.degrees(math.atan(H / half_base_trap)) if half_base_trap > 0 else 0
 
-# --- 📐 РАСЧЕТ ЧИСТЫХ УГЛОВ ДЕТАЛИ ---
-fact_konek = 180.0 - (2 * angle_skat_side) # Чистый внутренний угол конька
-fact_yubka_side = 90.0 + angle_skat_side   # Чистый угол боковой юбки
-fact_yubka_tri = 90.0 + angle_skat_tri    # Чистый угол торцевой юбки
+fact_konek = 180.0 - (2 * angle_skat_side)
+fact_yubka_side = 90.0 + angle_skat_side
+fact_yubka_tri = 90.0 + angle_skat_tri
 
-# --- 🔨 УМНЫЙ ПЕРЕСЧЕТ ПОД УГЛОМЕР ВАШЕГО СТАНКА (180 - факт + 10) ---
+# Пересчет под ваш угломер станка (180 - факт + 10)
 stanko_konek = 180.0 - fact_konek + 10.0
 stanko_yubka_side = 180.0 - fact_yubka_side + 10.0
 stanko_yubka_tri = 180.0 - fact_yubka_tri + 10.0
 
-# Перевод в сантиметры для рулетки
 mark_Y1 = round(single_pripusk / 10.0, 1)
 mark_H_side = round(h_trap / 10.0, 1)
 mark_H_tri = round(h_tri / 10.0, 1)
@@ -55,10 +50,8 @@ final_W = round(2 * h_trap + 2 * single_pripusk, 1)
 fig, ax = plt.subplots(figsize=(6, 6))
 ax.set_aspect('equal')
 
-# КРУПНО ПИШЕМ ОБЩИЙ РАЗМЕР КУСКА И УГЛЫ ГИБА
 st.success(f"📦 **ОБЩИЙ ОТРЕЗ ОТ РУЛОНА ДЛЯ ВСЕХ ДЕТАЛЕЙ: {round(final_L/10, 1)} см х {round(final_W/10, 1)} см**")
 
-# ВЫВОД ЗНАЧЕНИЙ ДЛЯ ВАШЕГО ЭКРАНА СТАНКА
 st.warning(f"🔧 **ЗНАЧЕНИЯ ДЛЯ ЭКРАНА УГЛОМЕРА ЛИСТОГИБА:**\n\n"
            f"• **При гибе конька (по центру):** выставить на датчике **{round(stanko_konek, 1)}°**\n"
            f"• **При гибе боковой юбки (Бабочка):** выставить на датчике **{round(stanko_yubka_side, 1)}°**\n"
@@ -78,7 +71,7 @@ if part_type == "🦋 Центр — «Бабочка»":
     ax.fill([0, klepki, klepki + half_base_trap, half_base_trap], [single_pripusk, single_pripusk, final_W/2, final_W/2], color='#d9e1f2', alpha=0.5, edgecolor='blue', linestyle='--')
     ax.fill([final_L, final_L - klepki, final_L - klepki - half_base_trap, final_L - half_base_trap], [single_pripusk, single_pripusk, final_W/2, final_W/2], color='#d9e1f2', alpha=0.5, edgecolor='blue', linestyle='--')
     ax.fill([0, klepki, klepki + half_base_trap, half_base_trap], [final_W - single_pripusk, final_W - single_pripusk, final_W/2, final_W/2], color='#d9e1f2', alpha=0.5, edgecolor='blue', linestyle='--')
-    ax.fill([final_L, final_L - klepki, final_L - klepki - half_base_trap, final_L - half_free_trap := final_W - single_pripusk], [final_W - single_pripusk, final_W - single_pripusk, final_W/2, final_W/2], color='#d9e1f2', alpha=0.5, edgecolor='blue', linestyle='--')
+    ax.fill([final_L, final_L - klepki, final_L - klepki - half_base_trap, final_L - half_base_trap], [final_W - single_pripusk, final_W - single_pripusk, final_W/2, final_W/2], color='#d9e1f2', alpha=0.5, edgecolor='blue', linestyle='--')
 
     ax.plot([klepki, klepki], [0, single_pripusk], color='green', linewidth=3)
     ax.plot([final_L - klepki, final_L - klepki], [0, single_pripusk], color='green', linewidth=3)
