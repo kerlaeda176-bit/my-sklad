@@ -36,7 +36,7 @@ fact_konek = 180.0 - (2 * angle_skat_side)
 fact_yubka_side = 90.0 + angle_skat_side
 fact_yubka_tri = 90.0 + angle_skat_tri
 
-# ПЕРЕСЧЕТ ПОД УГЛОМЕР СТАНКА С ОКРУГЛЕНИЕМ ДО ЦЕЛЫХ ГРАДУСОВ
+# ПЕРЕСЧЕТ ПОД УГЛОМЕР СТАНКА (180 - факт + 10) С ОКРУГЛЕНИЕМ ДО ЦЕЛЫХ
 stanko_konek = round(180.0 - fact_konek + 10.0)
 stanko_yubka_side = round(180.0 - fact_yubka_side + 10.0)
 stanko_yubka_tri = round(180.0 - fact_yubka_tri + 10.0)
@@ -65,26 +65,38 @@ st.warning(f"🔧 **ГРАДУСЫ НА УГЛОМЕРЕ СТАНКА:**\n\n"
            f"• ГИБ ТОРЦЕВОЙ ЮБКИ (ТРЕУГОЛЬНИК): **{stanko_yubka_tri}°**")
 
 if part_type == "🦋 Центр — «Бабочка»":
+    # Рисуем контур прямоугольного листа заготовки (Красный пунктир)
     ax.add_patch(patches.Rectangle((0, 0), final_L, final_W, linewidth=2, edgecolor='red', facecolor='none', linestyle='--'))
+    
+    # 🌟 ИСПРАВЛЕНО: Рисуем ЧИСТУЮ Бабочку без лишних торцевых треугольников
+    # Нижняя трапеция бокового ската
+    ax.fill([klepki, final_L - klepki, klepki + half_base_trap + K, klepki + half_base_trap], 
+            [single_pripusk, single_pripusk, final_W/2, final_W/2], color='#f9f9f2', edgecolor='black', linewidth=1.5)
+    
+    # Верхняя трапеция бокового ската
+    ax.fill([klepki, final_L - klepki, klepki + half_base_trap + K, klepki + half_base_trap], 
+            [final_W - single_pripusk, final_W - single_pripusk, final_W/2, final_W/2], color='#f9f9f2', edgecolor='black', linewidth=1.5)
+    
+    # Синяя линия конька четко ложится между вершинами трапеций по центру
     ax.plot([klepki + half_base_trap, klepki + half_base_trap + K], [final_W/2, final_W/2], color='blue', linewidth=3)
     
-    ax.plot([klepki, final_L - klepki], [single_pripusk, single_pripusk], color='black', linewidth=1.5)
-    ax.plot([klepki, klepki + half_base_trap], [single_pripusk, final_W/2], color='black', linewidth=1.2)
-    ax.plot([final_L - klepki, final_L - klepki - half_base_trap], [single_pripusk, final_W/2], color='black', linewidth=1.2)
-    ax.plot([klepki, final_L - klepki], [final_W - single_pripusk, final_W - single_pripusk], color='black', linewidth=1.5)
-    ax.plot([klepki, klepki + half_base_trap], [final_W - single_pripusk, final_W/2], color='black', linewidth=1.2)
-    ax.plot([final_L - klepki, final_L - klepki - half_base_trap], [final_W - single_pripusk, final_W/2], color='black', linewidth=1.2)
+    # Пунктирные линии гиба юбки низа (4 см от края трапеций)
+    ax.plot([klepki, final_L - klepki], [single_pripusk + yubka, single_pripusk + yubka], color='black', linestyle=':', linewidth=1)
+    ax.plot([klepki, final_L - klepki], [final_W - single_pripusk - yubka, final_W - single_pripusk - yubka], color='black', linestyle=':', linewidth=1)
     
+    # 🌟 Синие боковые ушки шва под заклепки (отгибаются внутрь купола)
     ax.fill([0, klepki, klepki + half_base_trap, half_base_trap], [single_pripusk, single_pripusk, final_W/2, final_W/2], color='#d9e1f2', alpha=0.5, edgecolor='blue', linestyle='--')
     ax.fill([final_L, final_L - klepki, final_L - klepki - half_base_trap, final_L - half_base_trap], [single_pripusk, single_pripusk, final_W/2, final_W/2], color='#d9e1f2', alpha=0.5, edgecolor='blue', linestyle='--')
     ax.fill([0, klepki, klepki + half_base_trap, half_base_trap], [final_W - single_pripusk, final_W - single_pripusk, final_W/2, final_W/2], color='#d9e1f2', alpha=0.5, edgecolor='blue', linestyle='--')
-    ax.fill([final_L, final_L - klepki, final_L - klepki - half_base_trap, final_L - (final_W - single_pripusk)], [final_W - single_pripusk, final_W - single_pripusk, final_W/2, final_W/2], color='#d9e1f2', alpha=0.5, edgecolor='blue', linestyle='--')
+    ax.fill([final_L, final_L - klepki, final_L - klepki - half_base_trap, final_L - half_base_trap], [final_W - single_pripusk, final_W - single_pripusk, final_W/2, final_W/2], color='#d9e1f2', alpha=0.5, edgecolor='blue', linestyle='--')
 
+    # Зеленые вертикальные линии надрезов ножницами по углам юбки
     ax.plot([klepki, klepki], [0, single_pripusk], color='green', linewidth=3)
     ax.plot([final_L - klepki, final_L - klepki], [0, single_pripusk], color='green', linewidth=3)
     ax.plot([klepki, klepki], [final_W - single_pripusk, final_W], color='green', linewidth=3)
     ax.plot([final_L - klepki, final_L - klepki], [final_W - single_pripusk, final_W], color='green', linewidth=3)
 
+    # Нанесение цепочки размеров по горизонтали (верхняя ровная строчка)
     half_base_cm = round(half_base_trap / 10.0, 1)
     text_y = final_W - single_pripusk / 2.0
     ax.text(klepki / 2.0, text_y, f"{mark_klepki}", ha='center', va='center', color='green', weight='bold', size=12)
@@ -93,6 +105,7 @@ if part_type == "🦋 Центр — «Бабочка»":
     ax.text(klepki + half_base_trap + K + half_base_trap / 2.0, text_y, f"{half_base_cm}", ha='center', va='center', color='black', weight='bold', size=12)
     ax.text(final_L - klepki / 2.0, text_y, f"{mark_klepki}", ha='center', va='center', color='green', weight='bold', size=12)
     
+    # Нанесение размеров по вертикали (левая строчка)
     text_x = klepki / 2.0
     ax.text(text_x, single_pripusk / 2.0, f"{mark_Y1}", ha='center', va='center', color='green', weight='bold', size=12)
     ax.text(text_x, single_pripusk + h_trap / 2.0, f"{mark_H_side}", ha='center', color='black', weight='bold', size=12)
@@ -105,7 +118,7 @@ if part_type == "🦋 Центр — «Бабочка»":
     plt.ylim(-20, final_W + 60)
 
 else:
-    # ТОРЦЕВОЙ ТРЕУГОЛЬНИК С БОКОВЫМИ УШКАМИ ДЛЯ КЛЕПОК ЮБКИ
+    # 🔺 ТОРЦЕВОЙ ТРЕУГОЛЬНИК С БОКОВЫМИ УШКАМИ ДЛЯ КЛЕПОК ЮБКИ
     tri_L = round(B + 2 * klepki, 1)
     tri_W = round(h_tri + single_pripusk, 1)
     
